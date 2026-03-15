@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1028697530315",
+    "project_id": "namma-guru-ai",
+    "storage_bucket": "namma-guru-ai.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1028697530315:android:ad72ee736e628e3de7a04e",
+        "android_client_info": {
+          "package_name": "com.njtech.namma_guru_ai"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCxAQLz7aoFY8SbacVHT1FRqE44CpVauBs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

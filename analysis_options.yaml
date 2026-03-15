@@ -1,0 +1,802 @@
+# ================================================================
+# Dart/Flutter Analysis Options - Erode Super App
+# ================================================================
+# Comprehensive lint rules for code quality, security, and best practices.
+# Based on: flutter_lints, dart_code_metrics, and security best practices.
+#
+# Usage:
+#   flutter analyze
+#   dart code metrics analyze lib
+#
+# Author: NJ TECH Backend Team
+# Version: 1.0.0
+# ================================================================
+
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  # ================================================================
+  # Language Settings
+  # ================================================================
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+  # ================================================================
+  # Exclusions
+  # ================================================================
+  exclude:
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+    - "build/**"
+    - ".dart_tool/**"
+    - "**/*.mocks.dart"
+    - "**/test/**.mocks.dart"
+
+  # ================================================================
+  # Errors and Warnings Configuration
+  # ================================================================
+  errors:
+    # Treat missing required parameters as errors
+    missing_required_param: error
+    
+    # Treat missing enum case in switch as error
+    missing_enum_constant_in_switch: error
+    
+    # Treat invalid assignments as errors
+    invalid_assignment: error
+    
+    # Treat dead code as errors
+    dead_code: error
+    
+    # Treat unused imports as errors
+    unused_import: error
+    
+    # Treat unused variables as errors
+    unused_local_variable: error
+    
+    # Treat unused fields as warnings
+    unused_field: warning
+    
+    # Treat override of non-visible member as error
+    override_on_non_overriding_member: error
+    
+    # Treat type lint warnings as errors
+    unnecessary_type_check: error
+    
+    # Treat constant identifier names as warning
+    constant_identifier_names: warning
+    
+    # Treat todo comments as info (not error)
+    todo: ignore
+    
+    # Treat deprecated member usage as warning
+    deprecated_member_use: warning
+    
+    # Treat deprecated member use from same package as warning
+    deprecated_member_use_from_same_package: warning
+    
+    # Treat missing return as error
+    missing_return: error
+    
+    # Treat empty constructor body as warning
+    empty_constructor_bodies: warning
+    
+    # Treat empty catch block as error
+    empty_catches: error
+
+  # ================================================================
+  # Plugins (dart_code_metrics)
+  # ================================================================
+  plugins:
+    - dart_code_metrics
+
+  # ================================================================
+  # Strong Mode
+  # ================================================================
+  strong-mode:
+    implicit-casts: false
+    implicit-dynamic: false
+
+# ================================================================
+# Lint Rules
+# ================================================================
+linter:
+  rules:
+    # ============================================================
+    # Error Rules (Must Fix)
+    # ============================================================
+    
+    # Avoid empty else statements
+    avoid_empty_else: true
+    
+    # Avoid printing debug information
+    avoid_print: true
+    
+    # Avoid relative imports for files in lib/
+    avoid_relative_lib_imports: true
+    
+    # Avoid slow async dart:ui methods
+    avoid_slow_async_io: true
+    
+    # Avoid using web-only APIs outside web
+    avoid_web_libraries_in_flutter: true
+    
+    # Cancel instances of dart:async StreamSubscription
+    cancel_subscriptions: true
+    
+    # Close instances of dart:io HttpClient
+    close_sinks: true
+    
+    # Only reference variables and imports in scope
+    comment_references: true
+    
+    # Diagnostic messages should use the correct syntax
+    diagnostic_describe_all_properties: true
+    
+    # Avoid using dart:io in Flutter packages
+    do_not_use_environment: false  # Disabled for flutter_dotenv compatibility
+    
+    # Ensure all switch cases have break/return/continue/throw
+    no_duplicate_case_values: true
+    
+    # Prefer final in for-each loop variable if reference is not reassigned
+    prefer_final_in_for_each: true
+    
+    # Use interpolation to compose strings and values
+    prefer_interpolation_to_compose_strings: true
+    
+    # Use null-aware spread operator
+    prefer_null_aware_operators: true
+    
+    # Sort constructors before other members
+    sort_child_properties_last: true
+    
+    # Sort dependencies in pubspec.yaml
+    sort_pub_dependencies: true
+    
+    # Test type of exception in on-catch clause
+    test_types_in_equals: true
+    
+    # Throw only instances of classes extending Exception or Error
+    throw_in_finally: true
+    
+    # Use key in widget constructors
+    use_key_in_widget_constructors: true
+    
+    # Use valid regular expressions
+    valid_regexps: true
+
+    # ============================================================
+    # Warning Rules (Should Fix)
+    # ============================================================
+    
+    # Always declare return types
+    always_declare_return_types: true
+    
+    # Always put control body on new line
+    always_put_control_body_on_new_line: true
+    
+    # Always put required named parameters first
+    always_put_required_named_parameters_first: true
+    
+    # Always specify types
+    always_specify_types: false  # Disabled - too verbose
+    
+    # Always use package imports
+    always_use_package_imports: false  # Disabled - relative imports used
+    
+    # Annotate overrides
+    annotate_overrides: true
+    
+    # Avoid annotating with dynamic
+    avoid_annotating_with_dynamic: true
+    
+    # Avoid bool literals in conditions
+    avoid_bool_literals_in_conditional_expressions: true
+    
+    # Avoid catches without on clauses
+    avoid_catches_without_on_clauses: false  # Disabled - generic catches useful
+    
+    # Avoid catching Error
+    avoid_catching_errors: true
+    
+    # Avoid classes with only static members
+    avoid_classes_with_only_static_members: true
+    
+    # Avoid double invocations
+    avoid_double_and_int_checks: true
+    
+    # Avoid escaping inner quotes
+    avoid_escaping_inner_quotes: true
+    
+    # Avoid field initializers in const classes
+    avoid_field_initializers_in_const_classes: true
+    
+    # Avoid final parameters
+    avoid_final_parameters: false  # Disabled - can be useful
+    
+    # Avoid function literals in forEach
+    avoid_function_literals_in_foreach_calls: true
+    
+    # Avoid implementing value types
+    avoid_implementing_value_types: true
+    
+    # Avoid init with null
+    avoid_init_to_null: true
+    
+    # Avoid js rounded ints
+    avoid_js_rounded_ints: true
+    
+    # Avoid null checks in equality operators
+    avoid_null_checks_in_equality_operators: true
+    
+    # Avoid positional boolean parameters
+    avoid_positional_boolean_parameters: true
+    
+    # Avoid private typedef functions
+    avoid_private_typedef_functions: true
+    
+    # Avoid redundant argument values
+    avoid_redundant_argument_values: true
+    
+    # Avoid renaming imports
+    avoid_renaming_method_parameters: true
+    
+    # Avoid return types on setters
+    avoid_return_types_on_setters: true
+    
+    # Avoid returning null for void
+    avoid_returning_null_for_void: true
+    
+    # Avoid returning this
+    avoid_returning_this: true
+    
+    # Avoid setters without getters
+    avoid_setters_without_getters: true
+    
+    # Avoid shadowing type parameters
+    avoid_shadowing_type_parameters: true
+    
+    # Avoid single cascade in expression statements
+    avoid_single_cascade_in_expression_statements: true
+    
+    # Avoid types as parameter names
+    avoid_types_as_parameter_names: true
+    
+    # Avoid types on closure parameters
+    avoid_types_on_closure_parameters: true
+    
+    # Avoid unnecessary containers
+    avoid_unnecessary_containers: true
+    
+    # Avoid unused constructor parameters
+    avoid_unused_constructor_parameters: true
+    
+    # Avoid void async
+    avoid_void_async: true
+    
+    # Await only futures
+    await_only_futures: true
+    
+    # Camel case extensions
+    camel_case_extensions: true
+    
+    # Camel case types
+    camel_case_types: true
+    
+    # Cascade invocations
+    cascade_invocations: true
+    
+    # Cast nullable to non-nullable
+    cast_nullable_to_non_nullable: true
+    
+    # Conditional uri does not exist
+    conditional_uri_does_not_exist: true
+    
+    # Constant identifier names
+    constant_identifier_names: true
+    
+    # Control flow in finally
+    control_flow_in_finally: true
+    
+    # Curly braces in flow control structures
+    curly_braces_in_flow_control_structures: true
+    
+    # Depend on referenced packages
+    depend_on_referenced_packages: true
+    
+    # Deprecated consistency
+    deprecated_consistency: true
+    
+    # Directives ordering
+    directives_ordering: true
+    
+    # Empty statements
+    empty_statements: true
+    
+    # Eol at end of file
+    eol_at_end_of_file: true
+    
+    # Exhaustive cases
+    exhaustive_cases: true
+    
+    # File names
+    file_names: true
+    
+    # Flutter style todos
+    flutter_style_todos: false  # Disabled - standard TODOs fine
+    
+    # Hash and equals
+    hash_and_equals: true
+    
+    # Implementation imports
+    implementation_imports: true
+    
+    # Join return with assignment
+    join_return_with_assignment: true
+    
+    # Leading newlines in multiline strings
+    leading_newlines_in_multiline_strings: true
+    
+    # Library annotations
+    library_annotations: true
+    
+    # Library names
+    library_names: true
+    
+    # Library prefixes
+    library_prefixes: true
+    
+    # Library private types in public api
+    library_private_types_in_public_api: true
+    
+    # Lines longer than 80 chars
+    lines_longer_than_80_chars: false  # Disabled - 120 char limit preferred
+    
+    # Missing whitespace between adjacent strings
+    missing_whitespace_between_adjacent_strings: true
+    
+    # No adjacent strings in list
+    no_adjacent_strings_in_list: true
+    
+    # No default cases
+    no_default_cases: false  # Disabled - default cases useful
+    
+    # No leading underscores for library prefixes
+    no_leading_underscores_for_library_prefixes: true
+    
+    # No leading underscores for local identifiers
+    no_leading_underscores_for_local_identifiers: true
+    
+    # No logic in create state
+    no_logic_in_create_state: true
+    
+    # No runtimeType toString
+    no_runtimeType_toString: true
+    
+    # Non-constant identifier names
+    non_constant_identifier_names: true
+    
+    # Null check on nullable type parameter
+    null_check_on_nullable_type_parameter: true
+    
+    # Null closures
+    null_closures: true
+    
+    # Use omit local variable names
+    omit_local_variable_types: false  # Disabled - types can improve readability
+    
+    # Use only throw in finally
+    only_throw_errors: true
+    
+    # Use package api
+    package_api_docs: true
+    
+    # Use package names
+    package_names: true
+    
+    # Use package prefixes
+    package_prefixed_library_names: true
+    
+    # Use parameter assignments
+    parameter_assignments: false  # Disabled - can reduce readability
+    
+    # Use prefer adjacents
+    prefer_adjacent_string_concatenation: true
+    
+    # Use prefer asserts
+    prefer_asserts_in_initializer_lists: true
+    
+    # Use prefer asserts with message
+    prefer_asserts_with_message: true
+    
+    # Use prefer collection literals
+    prefer_collection_literals: true
+    
+    # Use prefer conditional expressions
+    prefer_conditional_assignment: true
+    
+    # Use prefer const constructors
+    prefer_const_constructors: true
+    
+    # Use prefer const literals
+    prefer_const_declarations: true
+    
+    # Use prefer const with generics
+    prefer_const_literals_to_create_immutables: true
+    
+    # Use prefer constructors
+    prefer_constructors_over_static_methods: true
+    
+    # Use prefer contains
+    prefer_contains: true
+    
+    # Use prefer double quotes
+    prefer_double_quotes: false  # Disabled - single quotes fine
+    
+    # Use prefer equal operators
+    prefer_equal_for_default_values: true
+    
+    # Use prefer expression function body
+    prefer_expression_function_bodies: false  # Disabled - can reduce readability
+    
+    # Use prefer final fields
+    prefer_final_fields: true
+    
+    # Use prefer final locals
+    prefer_final_locals: true
+    
+    # Use prefer final parameters
+    prefer_final_parameters: false  # Disabled - too restrictive
+    
+    # Use prefer for to elements
+    prefer_for_elements_to_map_fromIterable: true
+    
+    # Use prefer function expressions
+    prefer_function_declarations_over_variables: true
+    
+    # Use prefer generic methods
+    prefer_generic_function_type_aliases: true
+    
+    # Use prefer if elements
+    prefer_if_elements_to_conditional_expressions: true
+    
+    # Use prefer if null operators
+    prefer_if_null_operators: true
+    
+    # Use prefer initializers
+    prefer_initializing_formals: true
+    
+    # Use prefer inlined
+    prefer_inlined_adds: true
+    
+    # Use prefer int literals
+    prefer_int_literals: true
+    
+    # Use prefer is empty
+    prefer_is_empty: true
+    
+    # Use prefer is not empty
+    prefer_is_not_empty: true
+    
+    # Use prefer is not operator
+    prefer_is_not_operator: true
+    
+    # Use prefer mixin
+    prefer_mixin: true
+    
+    # Use prefer null aware operators
+    prefer_null_aware_method_calls: true
+    
+    # Use prefer relative imports
+    prefer_relative_imports: true
+    
+    # Use prefer single quotes
+    prefer_single_quotes: true
+    
+    # Use prefer typedef
+    prefer_typing_uninitialized_variables: true
+    
+    # Use prefer void
+    prefer_void_to_null: true
+    
+    # Use public member API docs
+    public_member_api_docs: false  # Disabled - too restrictive for current project
+    
+    # Use recursive getters
+    recursive_getters: true
+    
+    # Use require trailing commas
+    require_trailing_commas: true
+    
+    # Use secure pubspec
+    secure_pubspec_urls: true
+    
+    # Use sized box for whitespace
+    sized_box_for_whitespace: true
+    
+    # Use sized box shrink
+    sized_box_shrink_expand: true
+    
+    # Use slash for doc comments
+    slash_for_doc_comments: true
+    
+    # Use sort unnamed constructors first
+    sort_unnamed_constructors_first: true
+    
+    # Use type annotate public
+    type_annotate_public_apis: true
+    
+    # Use type init formals
+    type_init_formals: true
+    
+    # Use unawaited futures
+    unawaited_futures: true
+    
+    # Use unnecessary brace in string interps
+    unnecessary_brace_in_string_interps: true
+    
+    # Use unnecessary const
+    unnecessary_const: true
+    
+    # Use unnecessary constructor name
+    unnecessary_constructor_name: true
+    
+    # Use unnecessary getters setters
+    unnecessary_getters_setters: true
+    
+    # Use unnecessary lambdas
+    unnecessary_lambdas: true
+    
+    # Use unnecessary late
+    unnecessary_late: true
+    
+    # Use unnecessary new
+    unnecessary_new: true
+    
+    # Use unnecessary null aware assignments
+    unnecessary_null_aware_assignments: true
+    
+    # Use unnecessary null checks
+    unnecessary_null_checks: true
+    
+    # Use unnecessary null in if null operators
+    unnecessary_null_in_if_null_operators: true
+    
+    # Use unnecessary nullable for final variables
+    unnecessary_nullable_for_final_variable_declarations: true
+    
+    # Use unnecessary overrides
+    unnecessary_overrides: true
+    
+    # Use unnecessary parenthesis
+    unnecessary_parenthesis: true
+    
+    # Use unnecessary raw strings
+    unnecessary_raw_strings: true
+    
+    # Use unnecessary statements
+    unnecessary_statements: true
+    
+    # Use unnecessary string escapes
+    unnecessary_string_escapes: true
+    
+    # Use unnecessary string interpolations
+    unnecessary_string_interpolations: true
+    
+    # Use unnecessary this
+    unnecessary_this: true
+    
+    # Use unnecessary to list in spreads
+    unnecessary_to_list_in_spreads: true
+    
+    # Use unreachable from main
+    unreachable_from_main: false  # Disabled - can have false positives
+    
+    # Use unrelated type equality checks
+    unrelated_type_equality_checks: true
+    
+    # Use use build context synchronously
+    use_build_context_synchronously: true
+    
+    # Use use colored box
+    use_colored_box: true
+    
+    # Use use decorated box
+    use_decorated_box: true
+    
+    # Use use enums
+    use_enums: true
+    
+    # Use use full hex values for flutter colors
+    use_full_hex_values_for_flutter_colors: true
+    
+    # Use use function type syntax for parameters
+    use_function_type_syntax_for_parameters: true
+    
+    # Use use if null to convert nulls to bools
+    use_if_null_to_convert_nulls_to_bools: true
+    
+    # Use use is even rather than modulo
+    use_is_even_rather_than_modulo: true
+    
+    # Use use late for private fields and variables
+    use_late_for_private_fields_and_variables: true
+    
+    # Use use named constants
+    use_named_constants: true
+    
+    # Use use raw strings
+    use_raw_strings: true
+    
+    # Use use rethrow when possible
+    use_rethrow_when_possible: true
+    
+    # Use use setters to change properties
+    use_setters_to_change_properties: true
+    
+    # Use use string buffers
+    use_string_buffers: true
+    
+    # Use use string in part of directives
+    use_string_in_part_of_directives: true
+    
+    # Use use super parameters
+    use_super_parameters: true
+    
+    # Use use test throws matchers
+    use_test_throws_matchers: true
+    
+    # Use use to and as if applicable
+    use_to_and_as_if_applicable: true
+    
+    # Void checks
+    void_checks: true
+
+# ================================================================
+# Dart Code Metrics Configuration
+# ================================================================
+dart_code_metrics:
+  anti-patterns:
+    - long-method
+    - long-parameter-list
+
+  metrics:
+    cyclomatic-complexity: 20
+    number-of-parameters: 4
+    maximum-nesting-level: 5
+    source-lines-of-code: 50
+    maintainability-index: 50
+    lines-of-code: 100
+    number-of-methods: 10
+    weight-of-class: 0.33
+
+  metrics-exclude:
+    - test/**
+    - "**/*.g.dart"
+    - "**/*.freezed.dart"
+
+  rules:
+    # Avoid unused parameters
+    avoid-unused-parameters: true
+    
+    # Avoid nested ternary operator
+    avoid-nested-conditional-expressions: true
+    
+    # Avoid passing async functions
+    avoid-passing-async-when-sync-expected: true
+    
+    # Avoid collection methods with unrelated types
+    avoid-collection-methods-with-unrelated-types: true
+    
+    # Avoid dynamic
+    avoid-dynamic: false  # Disabled - too restrictive
+    
+    # Avoid global state
+    avoid-global-state: false  # Disabled - some global state necessary
+    
+    # Avoid late keyword
+    avoid-late-keyword: false  # Disabled - late can be useful
+    
+    # Avoid missing enum constant in switch
+    avoid-missing-enum-constant-in-switch: true
+    
+    # Avoid unnecessary type assertions
+    avoid-unnecessary-type-assertions: true
+    
+    # Avoid unnecessary type casts
+    avoid-unnecessary-type-casts: true
+    
+    # Avoid unnecessary conditions
+    avoid-unnecessary-conditions: true
+    
+    # Avoid redundant async
+    avoid-redundant-async: true
+    
+    # Avoid throw in finally block
+    avoid-throw-in-finally-block: true
+    
+    # Ban name
+    ban-name: false  # Disabled - no specific bans
+    
+    # Binary expression operand order
+    binary-expression-operand-order: true
+    
+    # Double literal format
+    double-literal-format: true
+    
+    # Member ordering
+    member-ordering:
+      order:
+        - constructors
+        - public-fields
+        - private-fields
+        - public-methods
+        - private-methods
+    
+    # Newline before return
+    newline-before-return: true
+    
+    # No boolean literal compare
+    no-boolean-literal-compare: true
+    
+    # No empty block
+    no-empty-block: true
+    
+    # No equal arguments
+    no-equal-arguments: true
+    
+    # No equal then else
+    no-equal-then-else: true
+    
+    # No magic number
+    no-magic-number: false  # Disabled - too noisy for UI code
+    
+    # No object declaration
+    no-object-declaration: true
+    
+    # Prefer async await
+    prefer-async-await: true
+    
+    # Prefer commenting analyzer ignores
+    prefer-commenting-analyzer-ignores: true
+    
+    # Prefer conditional expressions
+    prefer-conditional-expressions: true
+    
+    # Prefer correct identifier length
+    prefer-correct-identifier-length:
+      min-identifier-length: 2
+      max-identifier-length: 40
+      exceptions:
+        - i
+        - j
+        - k
+        - x
+        - y
+        - e
+    
+    # Prefer correct type name
+    prefer-correct-type-name:
+      min-length: 3
+      max-length: 40
+    
+    # Prefer first
+    prefer-first: true
+    
+    # Prefer immediate return
+    prefer-immediate-return: true
+    
+    # Prefer last
+    prefer-last: true
+    
+    # Prefer match file name
+    prefer-match-file-name: true
+    
+    # Prefer moving to variable
+    prefer-moving-to-variable: true
+    
+    # Prefer trailing comma
+    prefer-trailing-comma: true

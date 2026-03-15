@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <!--
+    ╔══════════════════════════════════════════════════════╗
+    ║  ERODE SUPER APP — PWA Web Shell  |  NJ TECH         ║
+    ╚══════════════════════════════════════════════════════╝
+  -->
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="description" content="Erode All-in-One Super App — Food, Grocery, Electronics & Bike Taxi. Powered by NJ TECH.">
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Erode App">
+
+  <!-- Android PWA / Splash color -->
+  <meta name="theme-color" content="#0A0A12">
+
+  <!-- Viewport -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+  <!-- Favicon -->
+  <link rel="icon" type="image/png" href="favicon.png"/>
+
+  <!-- PWA Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <title>Erode Super App</title>
+
+  <style>
+    /* Splash screen while Flutter loads */
+    body {
+      background-color: #08080F;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #flutter-splash {
+      position: fixed;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: #08080F;
+      z-index: 9999;
+      transition: opacity 0.4s ease;
+    }
+    #flutter-splash.hidden { opacity: 0; pointer-events: none; }
+
+    .splash-logo {
+      width: 80px; height: 80px;
+      background: linear-gradient(135deg, #FF6B2C, #FF9A5C);
+      border-radius: 22px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 40px;
+      box-shadow: 0 0 40px rgba(255,107,44,0.4);
+      animation: pulse 1.5s ease-in-out infinite;
+    }
+    .splash-title {
+      color: #F0F0FF;
+      font-family: system-ui, sans-serif;
+      font-size: 22px;
+      font-weight: 700;
+      margin-top: 20px;
+      letter-spacing: 0.5px;
+    }
+    .splash-sub {
+      color: #8888AA;
+      font-family: system-ui, sans-serif;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+    .splash-dots {
+      display: flex; gap: 6px; margin-top: 32px;
+    }
+    .splash-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+      background: #FF6B2C;
+      animation: bounce 1.2s ease-in-out infinite;
+    }
+    .splash-dot:nth-child(2) { animation-delay: 0.2s; background: #00D4AA; }
+    .splash-dot:nth-child(3) { animation-delay: 0.4s; background: #2979FF; }
+
+    @keyframes pulse {
+      0%,100% { box-shadow: 0 0 40px rgba(255,107,44,0.4); }
+      50%      { box-shadow: 0 0 60px rgba(255,107,44,0.7); }
+    }
+    @keyframes bounce {
+      0%,100% { transform: translateY(0);   opacity: 0.5; }
+      50%      { transform: translateY(-8px); opacity: 1; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Splash Screen -->
+  <div id="flutter-splash">
+    <div class="splash-logo">🌟</div>
+    <div class="splash-title">Erode Super App</div>
+    <div class="splash-sub">by NJ TECH</div>
+    <div class="splash-dots">
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+      <div class="splash-dot"></div>
+    </div>
+  </div>
+
+  <script>
+    window.addEventListener('flutter-first-frame', function () {
+      const splash = document.getElementById('flutter-splash');
+      splash.classList.add('hidden');
+      setTimeout(() => splash.remove(), 500);
+    });
+  </script>
+
+  <script src="flutter_bootstrap.js" async></script>
+</body>
+</html>

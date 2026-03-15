@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!--
+    ================================================================
+    Erode Super App - நம்ம ஊரு ஆப்
+    Powered by NJ TECH · Erode
+    Version: 1.0.0
+    ================================================================
+  -->
+
+  <!-- Base Configuration -->
+  <base href="$FLUTTER_BASE_HREF">
+  <meta charset="UTF-8">
+  <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
+  <meta name="color-scheme" content="dark light">
+  <meta name="supported-color-schemes" content="dark light">
+
+  <!-- Primary Meta Tags -->
+  <title>Erode Super App - நம்ம ஊரு ஆப்</title>
+  <meta name="title" content="Erode Super App - All-in-One Commerce Platform">
+  <meta name="description" content="Order food, grocery, tech accessories, and book bike taxis in Erode. Voice-first AI assistant supporting Tamil and English. Built by NJ TECH.">
+  <meta name="keywords" content="Erode, food delivery, grocery, bike taxi, tech accessories, Tamil, NJ TECH, online shopping, 16th Road, Erode Fresh">
+  <meta name="author" content="NJ TECH">
+  <meta name="publisher" content="NJ TECH">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English, Tamil">
+  <meta name="revisit-after" content="7 days">
+  <meta name="rating" content="general">
+  <meta name="distribution" content="global">
+
+  <!-- Theme Colors -->
+  <meta name="theme-color" content="#7B6FE0" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#7B6FE0" media="(prefers-color-scheme: light)">
+  <meta name="msapplication-navbutton-color" content="#7B6FE0">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+
+  <!-- PWA Meta Tags -->
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="NammaGuru">
+  <meta name="application-name" content="Erode Super App">
+  <meta name="msapplication-starturl" content="/">
+  <meta name="msapplication-TileColor" content="#7B6FE0">
+  <meta name="msapplication-TileImage" content="icons/Icon-192.png">
+  <meta name="msapplication-config" content="none">
+
+  <!-- Favicon & Icons -->
+  <link rel="icon" type="image/png" href="favicon.png">
+  <link rel="shortcut icon" type="image/png" href="favicon.png">
+  <link rel="apple-touch-icon" sizes="180x180" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" sizes="192x192" href="icons/Icon-192.png">
+  <link rel="icon" type="image/png" sizes="512x512" href="icons/Icon-512.png">
+  <link rel="mask-icon" href="icons/Icon-192.png" color="#7B6FE0">
+
+  <!-- Manifest -->
+  <link rel="manifest" href="manifest.json">
+
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://erode-super-app.njtech.in/">
+  <meta property="og:site_name" content="Erode Super App">
+  <meta property="og:title" content="Erode Super App - Your All-in-One Commerce Platform">
+  <meta property="og:description" content="Order food from 16th Road, groceries from Erode Fresh, tech from NJ TECH, or book a bike taxi. Voice-first AI assistant in Tamil & English.">
+  <meta property="og:image" content="https://erode-super-app.njtech.in/og-image.png">
+  <meta property="og:image:alt" content="Erode Super App Dashboard showing Food, Grocery, Tech, and Bike Taxi services">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:locale" content="en_IN">
+  <meta property="og:locale:alternate" content="ta_IN">
+  <meta property="fb:app_id" content="">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@NJTECH_Erode">
+  <meta name="twitter:creator" content="@NJTECH_Erode">
+  <meta name="twitter:url" content="https://erode-super-app.njtech.in/">
+  <meta name="twitter:title" content="Erode Super App - நம்ம ஊரு ஆப்">
+  <meta name="twitter:description" content="Order food, grocery, tech accessories & book bike taxis in Erode. Voice AI in Tamil & English.">
+  <meta name="twitter:image" content="https://erode-super-app.njtech.in/twitter-card.png">
+  <meta name="twitter:image:alt" content="Erode Super App - Food, Grocery, Tech, Bike Taxi">
+
+  <!-- Google / Search Engine -->
+  <meta name="google-site-verification" content="">
+  <meta name="bing-verification" content="">
+  <meta name="yandex-verification" content="">
+
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://erode-super-app.njtech.in/">
+
+  <!-- Alternate Languages -->
+  <link rel="alternate" hreflang="en" href="https://erode-super-app.njtech.in/">
+  <link rel="alternate" hreflang="ta" href="https://erode-super-app.njtech.in/?lang=ta">
+  <link rel="alternate" hreflang="x-default" href="https://erode-super-app.njtech.in/">
+
+  <!-- Preconnect for Performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://nijamdeen-kutty-guru-api.hf.space">
+  <link rel="dns-prefetch" href="https://fonts.googleapis.com">
+  <link rel="dns-prefetch" href="https://www.google-analytics.com">
+
+  <!-- Preload Critical Assets -->
+  <link rel="preload" href="fonts/NotoSansTamil-Regular.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="icons/Icon-192.png" as="image">
+
+  <meta name="google-signin-client_id" content="357526153693-XXXXXXXXXX.apps.googleusercontent.com">
+  <!-- PWA Splash Screen Styles -->
+  <style>
+    .splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #08080F 0%, #111118 50%, #08080F 100%);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 999999;
+      transition: opacity 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      pointer-events: none;
+    }
+
+    .splash-screen.visible {
+      pointer-events: auto;
+    }
+
+    .splash-logo {
+      width: 120px;
+      height: 120px;
+      background: linear-gradient(135deg, #7B6FE0 0%, #E07C6F 100%);
+      border-radius: 26px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 64px;
+      box-shadow: 0 20px 60px rgba(123, 111, 224, 0.5),
+                  0 0 40px rgba(123, 111, 224, 0.3);
+      animation: logoPulse 2.5s ease-in-out infinite;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .splash-logo::before {
+      content: '';
+      position: absolute;
+      top: -50%;
+      left: -50%;
+      width: 200%;
+      height: 200%;
+      background: linear-gradient(
+        45deg,
+        transparent 30%,
+        rgba(255, 255, 255, 0.1) 50%,
+        transparent 70%
+      );
+      animation: shimmer 2.5s ease-in-out infinite;
+    }
+
+    .splash-title {
+      margin-top: 28px;
+      font-family: 'Noto Sans Tamil', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #9B8FF0 0%, #E07C6F 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      letter-spacing: 0.5px;
+      text-align: center;
+    }
+
+    .splash-subtitle {
+      margin-top: 10px;
+      font-size: 12px;
+      color: #7777A0;
+      letter-spacing: 1.4px;
+      text-transform: uppercase;
+      font-weight: 500;
+      text-align: center;
+    }
+
+    .splash-tagline {
+      margin-top: 6px;
+      font-size: 10px;
+      color: #7B6FE0;
+      font-weight: 600;
+      letter-spacing: 0.8px;
+      text-align: center;
+    }
+
+    .splash-loader {
+      margin-top: 40px;
+      width: 48px;
+      height: 48px;
+      border: 3px solid rgba(123, 111, 224, 0.15);
+      border-top-color: #7B6FE0;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      box-shadow: 0 0 20px rgba(123, 111, 224, 0.3);
+    }
+
+    .splash-status {
+      margin-top: 20px;
+      font-size: 12px;
+      color: #7777A0;
+      font-weight: 500;
+      animation: fadeInOut 2s ease-in-out infinite;
+    }
+
+    @keyframes logoPulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 20px 60px rgba(123, 111, 224, 0.5),
+                    0 0 40px rgba(123, 111, 224, 0.3);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 25px 70px rgba(123, 111, 224, 0.6),
+                    0 0 50px rgba(123, 111, 224, 0.4);
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        transform: translateX(-50%) translateY(-50%) rotate(45deg);
+      }
+      100% {
+        transform: translateX(50%) translateY(50%) rotate(45deg);
+      }
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes fadeInOut {
+      0%, 100% {
+        opacity: 0.4;
+      }
+      50% {
+        opacity: 1;
+      }
+    }
+
+    .splash-screen.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+
+    /* Accessibility: Reduce motion */
+    @media (prefers-reduced-motion: reduce) {
+      .splash-logo,
+      .splash-loader,
+      .splash-status {
+        animation: none;
+      }
+      .splash-screen {
+        transition: none;
+      }
+    }
+
+    /* Dark mode support */
+    @media (prefers-color-scheme: light) {
+      .splash-screen {
+        background: linear-gradient(135deg, #F5F5FA 0%, #FFFFFF 50%, #F5F5FA 100%);
+      }
+      .splash-subtitle,
+      .splash-status {
+        color: #666680;
+      }
+    }
+  </style>
+
+  <!-- Google Fonts -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+Tamil:wght@400;500;600;700&display=swap">
+
+  <!-- Structured Data (JSON-LD) -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebApplication",
+    "name": "Erode Super App",
+    "alternateName": "நம்ம ஊரு ஆப்",
+    "shortName": "NammaGuru",
+    "url": "https://erode-super-app.njtech.in/",
+    "description": "Erode's all-in-one commerce app for Food, Grocery, Tech accessories, and Bike Taxi. Voice-first AI assistant supporting Tamil and English.",
+    "applicationCategory": "ShoppingApplication",
+    "operatingSystem": "Web, Android, iOS",
+    "browserRequirements": "Requires JavaScript. Requires modern browser.",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "INR"
+    },
+    "aggregateRating": {
+      "@type": "AggregateRating",
+      "ratingValue": "4.8",
+      "ratingCount": "1250",
+      "bestRating": "5",
+      "worstRating": "1"
+    },
+    "author": {
+      "@type": "Organization",
+      "name": "NJ TECH",
+      "url": "https://njtech.in/",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://njtech.in/logo.png"
+      }
+    },
+    "potentialAction": {
+      "@type": "UseAction",
+      "target": {
+        "@type": "EntryPoint",
+        "urlTemplate": "https://erode-super-app.njtech.in/",
+        "actionPlatform": [
+          "http://schema.org/DesktopWebPlatform",
+          "http://schema.org/MobileWebPlatform"
+        ]
+      },
+      "result": {
+        "@type": "Thing",
+        "name": "Order food, grocery, tech accessories or book bike taxi"
+      }
+    },
+    "inLanguage": ["en", "ta"],
+    "featureList": "Voice Chat, Tamil Support, Food Delivery, Grocery, Tech Accessories, Bike Taxi",
+    "screenshot": "https://erode-super-app.njtech.in/screenshots/dashboard.png"
+  }
+  </script>
+
+  <!-- Additional Organization Schema -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "NJ TECH",
+    "alternateName": "NJ TECH Erode",
+    "url": "https://njtech.in/",
+    "logo": "https://njtech.in/logo.png",
+    "description": "Technology solutions provider in Erode, Tamil Nadu. Creator of Erode Super App.",
+    "address": {
+      "@type": "PostalAddress",
+      "addressLocality": "Erode",
+      "addressRegion": "Tamil Nadu",
+      "addressCountry": "IN"
+    },
+    "contactPoint": {
+      "@type": "ContactPoint",
+      "contactType": "customer service",
+      "availableLanguage": ["Tamil", "English"]
+    },
+    "sameAs": [
+      "https://twitter.com/NJTECH_Erode",
+      "https://www.instagram.com/njtech_erode/",
+      "https://www.facebook.com/NJTECHErode"
+    ]
+  }
+  </script>
+</head>
+
+<body>
+  <div id="recaptcha-container"></div>
+  <!-- PWA Install Prompt -->
+  <div id="pwa-install-prompt" class="pwa-prompt" style="display: none; position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #1A1A26 0%, #20202E 100%); border: 1px solid rgba(123, 111, 224, 0.3); border-radius: 16px; padding: 20px; max-width: 340px; box-shadow: 0 10px 40px rgba(0,0,0,0.4); z-index: 99999;">
+    <div class="pwa-prompt-content">
+      <div style="display: flex; align-items: center; margin-bottom: 12px;">
+        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #7B6FE0 0%, #E07C6F 100%); border-radius: 12px; display: flex; justify-content: center; align-items: center; font-size: 24px; margin-right: 12px;">🛒</div>
+        <div>
+          <h3 style="margin: 0; font-size: 16px; font-weight: 700; color: #EEEEF5; font-family: 'Noto Sans Tamil', sans-serif;">Install App</h3>
+          <p style="margin: 2px 0 0 0; font-size: 11px; color: #7777A0;">Get the full experience</p>
+        </div>
+      </div>
+      <ul style="margin: 0 0 16px 0; padding-left: 20px; font-size: 12px; color: #9B9BC7;">
+        <li style="margin-bottom: 4px;">✓ Works offline</li>
+        <li style="margin-bottom: 4px;">✓ Fast loading</li>
+        <li style="margin-bottom: 4px;">✓ No app store needed</li>
+      </ul>
+      <div style="display: flex; gap: 10px;">
+        <button id="pwa-install-btn" style="flex: 1; background: linear-gradient(135deg, #7B6FE0 0%, #9B8FF0 100%); color: white; border: none; border-radius: 10px; padding: 12px 16px; font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Noto Sans Tamil', sans-serif;">Install</button>
+        <button id="pwa-dismiss-btn" style="flex: 1; background: transparent; color: #7777A0; border: 1px solid rgba(123, 111, 224, 0.3); border-radius: 10px; padding: 12px 16px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'Noto Sans Tamil', sans-serif;">Later</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- PWA Install Script -->
+  <script>
+    (function() {
+      var deferredPrompt = null;
+      var pwaPrompt = document.getElementById('pwa-install-prompt');
+      var installBtn = document.getElementById('pwa-install-btn');
+      var dismissBtn = document.getElementById('pwa-dismiss-btn');
+
+      // Check if already dismissed
+      if (localStorage.getItem('pwa-dismissed') === 'true') {
+        pwaPrompt.style.display = 'none';
+      }
+
+      // Listen for install prompt
+      window.addEventListener('beforeinstallprompt', function(e) {
+        e.preventDefault();
+        deferredPrompt = e;
+        // Show prompt after 10 seconds
+        setTimeout(function() {
+          if (localStorage.getItem('pwa-dismissed') !== 'true') {
+            pwaPrompt.style.display = 'block';
+            pwaPrompt.classList.add('visible');
+          }
+        }, 10000);
+      });
+
+      // Handle install button click
+      if (installBtn) {
+        installBtn.addEventListener('click', function() {
+          if (deferredPrompt) {
+            deferredPrompt.prompt();
+            deferredPrompt.userChoice.then(function(choiceResult) {
+              if (choiceResult.outcome === 'accepted') {
+                pwaPrompt.style.display = 'none';
+              }
+              deferredPrompt = null;
+            });
+          }
+        });
+      }
+
+      // Handle dismiss button click
+      if (dismissBtn) {
+        dismissBtn.addEventListener('click', function() {
+          pwaPrompt.style.display = 'none';
+          localStorage.setItem('pwa-dismissed', 'true');
+        });
+      }
+
+      // Hide on app installed
+      window.addEventListener('appinstalled', function() {
+        pwaPrompt.style.display = 'none';
+        localStorage.removeItem('pwa-dismissed');
+      });
+    })();
+  </script>
+
+  <!-- Splash Screen -->
+  <div class="splash-screen visible" id="splash-screen" role="progressbar" aria-label="Erode Super App loading">
+    <div class="splash-logo" aria-hidden="true">🛒</div>
+    <div class="splash-title">Erode Super App</div>
+    <div class="splash-subtitle">Food · Grocery · Tech · Bike Taxi</div>
+    <div class="splash-tagline">Powered by NJ TECH · Erode</div>
+    <div class="splash-loader" aria-hidden="true"></div>
+    <div class="splash-status">Loading...</div>
+  </div>
+
+  <!-- Splash Screen Script -->
+  <script>
+    (function() {
+      var splash = document.getElementById('splash-screen');
+      var status = document.querySelector('.splash-status');
+
+      // Update status text
+      var statuses = ['Initializing...', 'Loading resources...', 'Preparing app...', 'Almost ready...'];
+      var index = 0;
+      var statusInterval = setInterval(function() {
+        index = (index + 1) % statuses.length;
+        if (status) status.textContent = statuses[index];
+      }, 800);
+
+      // Hide splash when Flutter is ready
+      window.addEventListener('flutter-first-frame', function() {
+        clearInterval(statusInterval);
+        if (splash) {
+          splash.classList.add('hidden');
+          splash.classList.remove('visible');
+          setTimeout(function() {
+            splash.style.display = 'none';
+          }, 400);
+        }
+      }, { once: true });
+
+      // Fallback: hide after 8 seconds
+      setTimeout(function() {
+        clearInterval(statusInterval);
+        if (splash && splash.classList.contains('visible')) {
+          splash.classList.add('hidden');
+          splash.classList.remove('visible');
+          setTimeout(function() {
+            splash.style.display = 'none';
+          }, 400);
+        }
+      }, 8000);
+    })();
+  </script>
+
+  <!-- Flutter Bootstrap -->
+  <script src="flutter_bootstrap.js" async></script>
+
+  <!-- Service Worker Registration -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', function() {
+        navigator.serviceWorker.register('flutter_service_worker.js')
+          .then(function(registration) {
+            console.log('ServiceWorker registration successful:', registration.scope);
+          })
+          .catch(function(err) {
+            console.log('ServiceWorker registration failed:', err);
+          });
+      });
+    }
+  </script>
+
+  <!-- Analytics (Optional - Add your tracking ID) -->
+  <script>
+    // Google Analytics placeholder
+    // Replace with your actual GA4 measurement ID
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    // gtag('js', new Date());
+    // gtag('config', 'G-XXXXXXXXXX');
+  </script>
+</body>
+</html>
