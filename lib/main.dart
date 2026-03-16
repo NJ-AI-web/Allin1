@@ -37,7 +37,6 @@ import 'screens/captain_screen.dart';
 import 'screens/cart_screen.dart';
 import 'screens/dashboard_screen.dart' as SuperDash;
 import 'screens/landing_screen.dart';
-import 'screens/login_screen.dart';
 import 'screens/notifications_screen.dart';
 import 'screens/order_tracking_screen.dart';
 import 'screens/payment_screen.dart';
@@ -287,11 +286,12 @@ class Allin1App extends StatelessWidget {
                 if (snap.hasData) {
                   return const SplashScreen(); // Show splash then Dashboard
                 }
-                return const LoginScreen();
+                return const CustomerLoginScreen();
               },
             ),
       routes: {
-        '/login': (ctx) => const LoginScreen(),
+        '/login': (ctx) => const CustomerLoginScreen(),
+        '/dashboard': (ctx) => const SuperDash.DashboardScreen(),
         '/chat': (ctx) {
           final args = ModalRoute.of(ctx)?.settings.arguments;
           return ChatScreen(initialMessage: args is String ? args : null);
