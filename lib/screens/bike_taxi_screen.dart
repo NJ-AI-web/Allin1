@@ -1,19 +1,21 @@
 // ================================================================
-// BikeTaxiScreen v3.0 — Erode Super App
+// BikeTaxiScreen v3.0 — Allin1 Super App
 // FIXED for flutter_map ^8.2.2 + latlong2 ^0.9.1
 // CTO Verified: All API changes applied ✅
+// CTO Verified: All API changes applied
 //
 // Key fixes vs v2:
 //   [1] isDotted → pattern: StrokePattern.dotted()
 //   [2] AnimatedBuilder inside MarkerLayer → StatefulWidget marker
 //   [3] Unnecessary type checks removed
 //   [4] showModalBottomSheet explicit type arg added
-//   [5] withOpacity deprecation warnings addressed
+//   [11] withValues addressed
 //   [6] CameraFit.bounds padding syntax corrected
 // ================================================================
 
 import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:firebase_auth/firebase_auth.dart';
@@ -22,6 +24,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+import 'payment_screen.dart';
 
 // ── Theme (matches main.dart exactly) ───────────────────────────
 const Color kBg = Color(0xFF08080F);
@@ -51,14 +54,14 @@ const List<LatLng> kNearbyRiders = [
 
 // ── Ride type data model ─────────────────────────────────────────
 class _RideType {
-  final String emoji;
+  final IconData icon;
   final String label;
   final String sublabel;
   final String eta;
   final int ratePerKm;
   final Color color;
   const _RideType({
-    required this.emoji,
+    required this.icon,
     required this.label,
     required this.sublabel,
     required this.eta,
@@ -69,41 +72,62 @@ class _RideType {
 
 const List<_RideType> _rides = [
   _RideType(
-      emoji: '🏍️',
-      label: 'Bike',
-      sublabel: 'Fast · Solo',
-      eta: '3 min',
-      ratePerKm: 12,
-      color: kGold),
+    icon: Icons.directions_bike,
+    label: 'Bike',
+    sublabel: 'Fast · Solo',
+    eta: '3 min',
+    ratePerKm: 12,
+    color: kGold,
+  ),
   _RideType(
-      emoji: '🛺',
-      label: 'Auto',
-      sublabel: 'Comfort · 3',
-      eta: '5 min',
-      ratePerKm: 14,
-      color: kGreen),
+    icon: Icons.local_taxi,
+    label: 'Auto',
+    sublabel: 'Comfort · 3',
+    eta: '5 min',
+    ratePerKm: 14,
+    color: kGreen,
+  ),
   _RideType(
-      emoji: '📦',
-      label: 'Parcel',
-      sublabel: 'Quick Delivery',
-      eta: '8 min',
-      ratePerKm: 20,
-      color: kPurple2),
+    icon: Icons.local_shipping,
+    label: 'Parcel',
+    sublabel: 'Quick Delivery',
+    eta: '8 min',
+    ratePerKm: 20,
+    color: kPurple2,
+  ),
 ];
 
 // ── Recent places ────────────────────────────────────────────────
 final List<_Place> _recentPlaces = [
-  _Place('🏠', 'Home', '15, Gandhi Nagar, Erode', LatLng(11.3350, 77.7100)),
-  _Place(
-      '💼', 'NJ TECH', 'Periyar Nagar, Erode 638001', LatLng(11.3430, 77.7200)),
-  _Place('🏪', 'Erode Market', 'Big Bazar Street, Erode',
-      LatLng(11.3480, 77.7260)),
-  _Place('🏥', 'GKNM Hospital', 'Nethaji Rd, Erode 638001',
-      LatLng(11.3390, 77.7320)),
+  const _Place(
+    Icons.home,
+    'Home',
+    '15, Gandhi Nagar, Erode',
+    LatLng(11.3350, 77.7100),
+  ),
+  const _Place(
+    Icons.work,
+    'NJ TECH',
+    'Periyar Nagar, Erode 638001',
+    LatLng(11.3430, 77.7200),
+  ),
+  const _Place(
+    Icons.store,
+    'Erode Market',
+    'Big Bazar Street, Erode',
+    LatLng(11.3480, 77.7260),
+  ),
+  const _Place(
+    Icons.local_hospital,
+    'GKNM Hospital',
+    'Nethaji Rd, Erode 638001',
+    LatLng(11.3390, 77.7320),
+  ),
 ];
 
 class _Place {
-  final String icon, label, address;
+  final IconData icon;
+  final String label, address;
   final LatLng latlng;
   const _Place(this.icon, this.label, this.address, this.latlng);
 }
@@ -149,11 +173,13 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
     _pulseCtrl =
         AnimationController(vsync: this, duration: const Duration(seconds: 2))
           ..repeat(reverse: true);
-    _pulseAnim = Tween<double>(begin: 0.85, end: 1.0)
+    _pulseAnim = Tween<double>(begin: 0.85, end: 1)
         .animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
 
     _slideCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 400));
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
     _slideAnim =
         CurvedAnimation(parent: _slideCtrl, curve: Curves.easeOutCubic);
 
@@ -258,27 +284,28 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) return;
     }
-    
+
     if (permission == LocationPermission.deniedForever) return;
 
-    setState(() => _pickupCtrl.text = "Fetching location...");
-    
+    setState(() => _pickupCtrl.text = 'Fetching location...');
+
     try {
-      Position position = await Geolocator.getCurrentPosition();
-      List<Placemark> placemarks = await placemarkFromCoordinates(position.latitude, position.longitude);
-      
+      final Position position = await Geolocator.getCurrentPosition();
+      final List<Placemark> placemarks =
+          await placemarkFromCoordinates(position.latitude, position.longitude);
+
       if (placemarks.isNotEmpty) {
-        Placemark p = placemarks[0];
-        String addr = "${p.name}, ${p.subLocality}, ${p.locality}";
+        final Placemark p = placemarks[0];
+        final String addr = '${p.name}, ${p.subLocality}, ${p.locality}';
         setState(() {
           _pickupCtrl.text = addr;
           _pickupPos = LatLng(position.latitude, position.longitude);
         });
         _onChanged();
-        _mapCtrl.move(_pickupPos, 14.0);
+        _mapCtrl.move(_pickupPos, 14);
       }
     } catch (e) {
-      setState(() => _pickupCtrl.text = "");
+      setState(() => _pickupCtrl.text = '');
     }
   }
 
@@ -298,8 +325,10 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
     if (!_pickupSet || !_dropSet) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Pickup & Drop location கொடுங்கள்! 📍',
-              style: GoogleFonts.notoSansTamil(color: kText)),
+          content: Text(
+            'Pickup & Drop location கொடுங்கள்! 📍',
+            style: GoogleFonts.notoSansTamil(color: kText),
+          ),
           backgroundColor: kCard2,
           behavior: SnackBarBehavior.floating,
           shape:
@@ -314,7 +343,8 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
       backgroundColor: kCard2,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (_) => _BookSheet(
         ride: _rides[_rideIdx],
         pickup: _pickupCtrl.text,
@@ -336,103 +366,107 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
 
     return Scaffold(
       backgroundColor: kBg,
-      body: Stack(children: [
-        // ── Layer 1: Real OSM Map ─────────────────────────────
-        AnimatedContainer(
-          duration: const Duration(milliseconds: 400),
-          height: mapH,
-          child: _buildMap(route),
-        ),
-
-        // ── Layer 2: Gradient overlay ─────────────────────────
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          height: MediaQuery.of(context).size.height * 0.65,
-          child: IgnorePointer(
-            child: Container(
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    Colors.transparent,
-                    Color(0xEB08080F),
-                    Color(0xFF08080F),
-                  ],
-                  stops: [0.0, 0.28, 0.55],
-                ),
-              ),
-            ),
+      body: Stack(
+        children: [
+          // ── Layer 1: Real OSM Map ─────────────────────────────
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 400),
+            height: mapH,
+            child: _buildMap(route),
           ),
-        ),
 
-        // ── Layer 3: Safe-area scrollable UI ──────────────────
-        SafeArea(
-          child: Column(children: [
-            _buildAppBar(),
-            Expanded(
-              child: SingleChildScrollView(
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    SizedBox(height: _mapBig ? 250 : 165),
-                    _buildLocCard(),
-                    const SizedBox(height: 14),
-                    _buildRideSelector(),
-                    if (_showFare) ...[
-                      const SizedBox(height: 14),
-                      _buildFareCard(),
+          // ── Layer 2: Gradient overlay ─────────────────────────
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: MediaQuery.of(context).size.height * 0.65,
+            child: IgnorePointer(
+              child: Container(
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [
+                      Colors.transparent,
+                      Color(0xEB08080F),
+                      Color(0xFF08080F),
                     ],
-                    const SizedBox(height: 22),
-                    _buildRecent(),
-                    const SizedBox(height: 20),
-                    _buildPromo(),
-                    const SizedBox(height: 10),
+                    stops: [0.0, 0.28, 0.55],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          // ── Layer 3: Safe-area scrollable UI ──────────────────
+          SafeArea(
+            child: Column(
+              children: [
+                _buildAppBar(),
+                Expanded(
+                  child: SingleChildScrollView(
+                    physics: const BouncingScrollPhysics(),
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 100),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        SizedBox(height: _mapBig ? 250 : 165),
+                        _buildLocCard(),
+                        const SizedBox(height: 14),
+                        _buildRideSelector(),
+                        if (_showFare) ...[
+                          const SizedBox(height: 14),
+                          _buildFareCard(),
+                        ],
+                        const SizedBox(height: 22),
+                        _buildRecent(),
+                        const SizedBox(height: 20),
+                        _buildPromo(),
+                        const SizedBox(height: 10),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // ── Layer 4: Map controls ─────────────────────────────
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.only(top: 66, right: 14),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    _mapBtn(
+                      icon: _mapBig ? Icons.fullscreen_exit : Icons.fullscreen,
+                      color: kPurple2,
+                      onTap: () => setState(() => _mapBig = !_mapBig),
+                    ),
+                    const SizedBox(height: 8),
+                    _mapBtn(
+                      icon: Icons.my_location,
+                      color: kGreen,
+                      onTap: () => _mapCtrl.move(kErodeCenter, 14),
+                    ),
                   ],
                 ),
               ),
             ),
-          ]),
-        ),
-
-        // ── Layer 4: Map controls ─────────────────────────────
-        SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 66, right: 14),
-            child: Align(
-              alignment: Alignment.topRight,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  _mapBtn(
-                    icon: _mapBig ? Icons.fullscreen_exit : Icons.fullscreen,
-                    color: kPurple2,
-                    onTap: () => setState(() => _mapBig = !_mapBig),
-                  ),
-                  const SizedBox(height: 8),
-                  _mapBtn(
-                    icon: Icons.my_location,
-                    color: kGreen,
-                    onTap: () => _mapCtrl.move(kErodeCenter, 14.0),
-                  ),
-                ],
-              ),
-            ),
           ),
-        ),
 
-        // ── Layer 5: Book button ──────────────────────────────
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: _buildBookBtn(),
-        ),
-      ]),
+          // ── Layer 5: Book button ──────────────────────────────
+          Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            child: _buildBookBtn(),
+          ),
+        ],
+      ),
     );
   }
 
@@ -466,10 +500,10 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
               // Main route
               Polyline(
                 points: route,
-                strokeWidth: 5.0,
+                strokeWidth: 5,
                 color: kPurple,
                 borderColor: const Color(0x509B8FF0),
-                borderStrokeWidth: 3.0,
+                borderStrokeWidth: 3,
               ),
               // FIX [1]: isDotted → pattern: StrokePattern.dotted()
               Polyline(
@@ -490,7 +524,7 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
                 point: _pickupPos,
                 width: 44,
                 height: 54,
-                child: _PinMarker(color: kGreen, emoji: '📍'),
+                child: const _PinMarker(color: kGreen, icon: Icons.location_on),
               ),
 
             // Drop
@@ -499,7 +533,7 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
                 point: _dropPos,
                 width: 44,
                 height: 54,
-                child: _PinMarker(color: kOrange, emoji: '🏁'),
+                child: const _PinMarker(color: kOrange, icon: Icons.flag),
               ),
 
             // FIX [2]: AnimatedBuilder removed from marker body.
@@ -513,24 +547,31 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
               ),
 
             // Nearby riders (static)
-            ...kNearbyRiders.map((pt) => Marker(
-                  point: pt,
-                  width: 22,
-                  height: 22,
-                  child: _NearbyDot(color: _rides[_rideIdx].color),
-                )),
+            ...kNearbyRiders.map(
+              (pt) => Marker(
+                point: pt,
+                width: 22,
+                height: 22,
+                child: _NearbyDot(color: _rides[_rideIdx].color),
+              ),
+            ),
           ],
         ),
 
         // OSM + CartoDB attribution (required by ToS)
         RichAttributionWidget(
           attributions: [
-            TextSourceAttribution('© OpenStreetMap',
-                onTap: () => launchUrl(
-                    Uri.parse('https://openstreetmap.org/copyright'))),
-            TextSourceAttribution('© CartoDB',
-                onTap: () =>
-                    launchUrl(Uri.parse('https://carto.com/attributions'))),
+            TextSourceAttribution(
+              '© OpenStreetMap',
+              onTap: () => launchUrl(
+                Uri.parse('https://openstreetmap.org/copyright'),
+              ),
+            ),
+            TextSourceAttribution(
+              '© CartoDB',
+              onTap: () =>
+                  launchUrl(Uri.parse('https://carto.com/attributions')),
+            ),
           ],
         ),
       ],
@@ -541,217 +582,270 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
   Widget _buildAppBar() {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-      decoration: BoxDecoration(
-        color: const Color(0xF20D0D18),
+      decoration: const BoxDecoration(
+        color: Color(0xF20D0D18),
         border: Border(bottom: BorderSide(color: kBorder)),
       ),
-      child: Row(children: [
-        GestureDetector(
-          onTap: () => Navigator.pop(context),
-          child: Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: kCard,
-              borderRadius: BorderRadius.circular(11),
-              border: Border.all(color: kBorder),
-            ),
-            child:
-                const Icon(Icons.arrow_back_ios_new, size: 14, color: kMuted),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(colors: [kGold, Color(0xFFD4961A)]),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child:
-              const Center(child: Text('🏍️', style: TextStyle(fontSize: 20))),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-            child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Bike Taxi',
-                style: GoogleFonts.notoSansTamil(
-                    fontSize: 16, fontWeight: FontWeight.w700, color: kText)),
-            const Text('Erode · Fast & Affordable',
-                style: TextStyle(fontSize: 10, color: kMuted)),
-          ],
-        )),
-        AnimatedBuilder(
-          animation: _pulseAnim,
-          builder: (_, __) => Transform.scale(
-            scale: _pulseAnim.value,
+      child: Row(
+        children: [
+          GestureDetector(
+            onTap: () => Navigator.pop(context),
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              width: 36,
+              height: 36,
               decoration: BoxDecoration(
-                color: const Color(0x1F3DBA6F),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: const Color(0x663DBA6F)),
+                color: kCard,
+                borderRadius: BorderRadius.circular(11),
+                border: Border.all(color: kBorder),
               ),
-              child: Row(mainAxisSize: MainAxisSize.min, children: [
-                Container(
-                    width: 6,
-                    height: 6,
-                    decoration: const BoxDecoration(
-                        color: kGreen, shape: BoxShape.circle)),
-                const SizedBox(width: 5),
-                const Text('LIVE',
-                    style: TextStyle(
+              child:
+                  const Icon(Icons.arrow_back_ios_new, size: 14, color: kMuted),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              gradient:
+                  const LinearGradient(colors: [kGold, Color(0xFFD4961A)]),
+              borderRadius: BorderRadius.circular(20),
+            ),
+            child: const Center(
+              child: Text('🏍️', style: TextStyle(fontSize: 20)),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Bike Taxi',
+                  style: GoogleFonts.notoSansTamil(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                    color: kText,
+                  ),
+                ),
+                const Text(
+                  'Erode · Fast & Affordable',
+                  style: TextStyle(fontSize: 10, color: kMuted),
+                ),
+              ],
+            ),
+          ),
+          AnimatedBuilder(
+            animation: _pulseAnim,
+            builder: (_, __) => Transform.scale(
+              scale: _pulseAnim.value,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                decoration: BoxDecoration(
+                  color: const Color(0x1F3DBA6F),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: const Color(0x663DBA6F)),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 6,
+                      height: 6,
+                      decoration: const BoxDecoration(
+                        color: kGreen,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    const Text(
+                      'LIVE',
+                      style: TextStyle(
                         fontSize: 9,
                         color: kGreen,
                         fontWeight: FontWeight.w800,
-                        letterSpacing: 1)),
-              ]),
+                        letterSpacing: 1,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
-        ),
-      ]),
+        ],
+      ),
     );
   }
 
   // ── LOCATION CARD ─────────────────────────────────────────────
   Widget _buildLocCard() {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: const Color(0xF7141420),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: kBorder),
         boxShadow: const [
           BoxShadow(
-              color: Color(0x6608080F), blurRadius: 20, offset: Offset(0, 8)),
+            color: Color(0x6608080F),
+            blurRadius: 20,
+            offset: Offset(0, 8),
+          ),
         ],
       ),
-      child: Column(children: [
-        // Pickup field
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 14, 14, 10),
-          child: Row(children: [
-            Column(children: [
-              Container(
-                width: 13,
-                height: 13,
-                decoration: const BoxDecoration(
-                    color: kGreen,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                          color: Color(0x993DBA6F),
-                          blurRadius: 8,
-                          spreadRadius: 2)
-                    ]),
-              ),
-              Container(
-                  width: 1.5,
-                  height: 26,
-                  margin: const EdgeInsets.symmetric(vertical: 4),
-                  color: kBorder),
-            ]),
-            const SizedBox(width: 12),
-            Expanded(
-              child: TextField(
-                controller: _pickupCtrl,
-                focusNode: _pickupFocus,
-                style: GoogleFonts.notoSansTamil(
-                    fontSize: 14, color: kText, fontWeight: FontWeight.w500),
-                decoration: InputDecoration(
-                  hintText: 'Pickup — எங்கே இருக்கீங்க?',
-                  hintStyle: const TextStyle(fontSize: 13, color: kMuted),
-                  border: InputBorder.none,
-                  isDense: true,
-                  contentPadding: EdgeInsets.zero,
-                  suffixIcon: IconButton(
-                    icon: const Icon(Icons.my_location, size: 16, color: kPurple2),
-                    onPressed: _getCurrentLocation,
+      child: Column(
+        children: [
+          // Pickup field
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 14, 14, 10),
+            child: Row(
+              children: [
+                Column(
+                  children: [
+                    Container(
+                      width: 13,
+                      height: 13,
+                      decoration: const BoxDecoration(
+                        color: kGreen,
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Color(0x993DBA6F),
+                            blurRadius: 8,
+                            spreadRadius: 2,
+                          ),
+                        ],
+                      ),
+                    ),
+                    Container(
+                      width: 1.5,
+                      height: 26,
+                      margin: const EdgeInsets.symmetric(vertical: 4),
+                      color: kBorder,
+                    ),
+                  ],
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _pickupCtrl,
+                    focusNode: _pickupFocus,
+                    style: GoogleFonts.notoSansTamil(
+                      fontSize: 14,
+                      color: kText,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: InputDecoration(
+                      hintText: 'Pickup — எங்கே இருக்கீங்க?',
+                      hintStyle: const TextStyle(fontSize: 13, color: kMuted),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                      suffixIcon: IconButton(
+                        icon: const Icon(
+                          Icons.my_location,
+                          size: 16,
+                          color: kPurple2,
+                        ),
+                        onPressed: _getCurrentLocation,
+                      ),
+                    ),
+                    textInputAction: TextInputAction.next,
+                    onSubmitted: (_) =>
+                        FocusScope.of(context).requestFocus(_dropFocus),
                   ),
                 ),
-                textInputAction: TextInputAction.next,
-                onSubmitted: (_) =>
-                    FocusScope.of(context).requestFocus(_dropFocus),
-              ),
+                if (_pickupSet)
+                  GestureDetector(
+                    onTap: () {
+                      _pickupCtrl.clear();
+                      setState(() => _pickupSet = false);
+                    },
+                    child: const Icon(Icons.close, size: 16, color: kMuted),
+                  ),
+              ],
             ),
-            if (_pickupSet)
-              GestureDetector(
-                onTap: () {
-                  _pickupCtrl.clear();
-                  setState(() => _pickupSet = false);
-                },
-                child: const Icon(Icons.close, size: 16, color: kMuted),
-              ),
-          ]),
-        ),
+          ),
 
-        // Swap divider
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 14),
-          child: Row(children: [
-            const SizedBox(width: 28),
-            const Expanded(child: Divider(color: kBorder)),
-            const SizedBox(width: 8),
-            GestureDetector(
-              onTap: _swap,
-              child: Container(
-                width: 30,
-                height: 30,
-                decoration: BoxDecoration(
-                  color: kCard2,
-                  borderRadius: BorderRadius.circular(9),
-                  border: Border.all(color: kBorder),
+          // Swap divider
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              children: [
+                const SizedBox(width: 28),
+                const Expanded(child: Divider(color: kBorder)),
+                const SizedBox(width: 8),
+                GestureDetector(
+                  onTap: _swap,
+                  child: Container(
+                    width: 30,
+                    height: 30,
+                    decoration: BoxDecoration(
+                      color: kCard2,
+                      borderRadius: BorderRadius.circular(9),
+                      border: Border.all(color: kBorder),
+                    ),
+                    child:
+                        const Icon(Icons.swap_vert, size: 16, color: kPurple2),
+                  ),
                 ),
-                child: const Icon(Icons.swap_vert, size: 16, color: kPurple2),
-              ),
+              ],
             ),
-          ]),
-        ),
+          ),
 
-        // Drop field
-        Padding(
-          padding: const EdgeInsets.fromLTRB(16, 10, 14, 14),
-          child: Row(children: [
-            Container(
-              width: 13,
-              height: 13,
-              decoration: BoxDecoration(
-                color: kOrange,
-                borderRadius: BorderRadius.circular(4),
-                boxShadow: const [
-                  BoxShadow(
-                      color: Color(0x99E07C6F), blurRadius: 8, spreadRadius: 1)
-                ],
-              ),
+          // Drop field
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 10, 14, 14),
+            child: Row(
+              children: [
+                Container(
+                  width: 13,
+                  height: 13,
+                  decoration: BoxDecoration(
+                    color: kOrange,
+                    borderRadius: BorderRadius.circular(4),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x99E07C6F),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: TextField(
+                    controller: _dropCtrl,
+                    focusNode: _dropFocus,
+                    style: GoogleFonts.notoSansTamil(
+                      fontSize: 14,
+                      color: kText,
+                      fontWeight: FontWeight.w500,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'Drop — எங்கே போகணும்?',
+                      hintStyle: TextStyle(fontSize: 13, color: kMuted),
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    textInputAction: TextInputAction.done,
+                  ),
+                ),
+                if (_dropSet)
+                  GestureDetector(
+                    onTap: () {
+                      _dropCtrl.clear();
+                      setState(() => _dropSet = false);
+                    },
+                    child: const Icon(Icons.close, size: 16, color: kMuted),
+                  ),
+              ],
             ),
-            const SizedBox(width: 12),
-            Expanded(
-                child: TextField(
-              controller: _dropCtrl,
-              focusNode: _dropFocus,
-              style: GoogleFonts.notoSansTamil(
-                  fontSize: 14, color: kText, fontWeight: FontWeight.w500),
-              decoration: InputDecoration(
-                hintText: 'Drop — எங்கே போகணும்?',
-                hintStyle: const TextStyle(fontSize: 13, color: kMuted),
-                border: InputBorder.none,
-                isDense: true,
-                contentPadding: EdgeInsets.zero,
-              ),
-              textInputAction: TextInputAction.done,
-            )),
-            if (_dropSet)
-              GestureDetector(
-                onTap: () {
-                  _dropCtrl.clear();
-                  setState(() => _dropSet = false);
-                },
-                child: const Icon(Icons.close, size: 16, color: kMuted),
-              ),
-          ]),
-        ),
-      ]),
+          ),
+        ],
+      ),
     );
   }
 
@@ -760,82 +854,123 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(children: [
-          const Text('🚀', style: TextStyle(fontSize: 12)),
-          const SizedBox(width: 6),
-          const Text('RIDE TYPE CHOOSE பண்ணுங்க',
+        const Row(
+          children: [
+            Icon(Icons.flash_on, size: 14, color: kGold),
+            SizedBox(width: 6),
+            Text(
+              'CHOOSE RIDE TYPE',
               style: TextStyle(
-                  fontSize: 10,
-                  color: kMuted,
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.w700)),
-        ]),
-        const SizedBox(height: 10),
-        Row(
-            children: List.generate(_rides.length, (i) {
-          final r = _rides[i];
-          final sel = _rideIdx == i;
-          return Expanded(
-            child: GestureDetector(
-              onTap: () => setState(() => _rideIdx = i),
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
-                padding:
-                    const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
-                decoration: BoxDecoration(
-                  color: sel
-                      ? Color.fromRGBO(r.color.r.toInt(), r.color.g.toInt(),
-                          r.color.b.toInt(), 0.12)
-                      : kCard,
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(
-                      color: sel
-                          ? Color.fromRGBO(r.color.r.toInt(), r.color.g.toInt(),
-                              r.color.b.toInt(), 0.5)
-                          : kBorder,
-                      width: sel ? 1.5 : 1),
-                ),
-                child: Column(children: [
-                  Text(r.emoji, style: const TextStyle(fontSize: 24)),
-                  const SizedBox(height: 5),
-                  Text(r.label,
-                      style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: sel ? r.color : kText)),
-                  const SizedBox(height: 2),
-                  Text(r.sublabel,
-                      style: TextStyle(
-                          fontSize: 9,
-                          color: sel
-                              ? Color.fromRGBO(r.color.r.toInt(),
-                                  r.color.g.toInt(), r.color.b.toInt(), 0.75)
-                              : kMuted),
-                      textAlign: TextAlign.center),
-                  const SizedBox(height: 6),
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                    decoration: BoxDecoration(
-                      color: Color.fromRGBO(r.color.r.toInt(),
-                          r.color.g.toInt(), r.color.b.toInt(), 0.12),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                          color: Color.fromRGBO(r.color.r.toInt(),
-                              r.color.g.toInt(), r.color.b.toInt(), 0.35)),
-                    ),
-                    child: Text(r.eta,
-                        style: TextStyle(
-                            fontSize: 9,
-                            color: r.color,
-                            fontWeight: FontWeight.w700)),
-                  ),
-                ]),
+                fontSize: 10,
+                color: kMuted,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w700,
               ),
             ),
-          );
-        })),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: List.generate(_rides.length, (i) {
+            final r = _rides[i];
+            final sel = _rideIdx == i;
+            return Expanded(
+              child: GestureDetector(
+                onTap: () => setState(() => _rideIdx = i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: EdgeInsets.only(right: i < 2 ? 8 : 0),
+                  padding:
+                      const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: sel
+                        ? Color.fromRGBO(
+                            r.color.r.toInt(),
+                            r.color.g.toInt(),
+                            r.color.b.toInt(),
+                            0.12,
+                          )
+                        : kCard,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: sel
+                          ? Color.fromRGBO(
+                              r.color.r.toInt(),
+                              r.color.g.toInt(),
+                              r.color.b.toInt(),
+                              0.5,
+                            )
+                          : kBorder,
+                      width: sel ? 1.5 : 1,
+                    ),
+                  ),
+                  child: Column(
+                    children: [
+                      Icon(r.icon, size: 28, color: sel ? r.color : kMuted),
+                      const SizedBox(height: 5),
+                      Text(
+                        r.label,
+                        style: TextStyle(
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                          color: sel ? r.color : kText,
+                        ),
+                      ),
+                      const SizedBox(height: 2),
+                      Text(
+                        r.sublabel,
+                        style: TextStyle(
+                          fontSize: 9,
+                          color: sel
+                              ? Color.fromRGBO(
+                                  r.color.r.toInt(),
+                                  r.color.g.toInt(),
+                                  r.color.b.toInt(),
+                                  0.75,
+                                )
+                              : kMuted,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: Color.fromRGBO(
+                            r.color.r.toInt(),
+                            r.color.g.toInt(),
+                            r.color.b.toInt(),
+                            0.12,
+                          ),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: Color.fromRGBO(
+                              r.color.r.toInt(),
+                              r.color.g.toInt(),
+                              r.color.b.toInt(),
+                              0.35,
+                            ),
+                          ),
+                        ),
+                        child: Text(
+                          r.eta,
+                          style: TextStyle(
+                            fontSize: 9,
+                            color: r.color,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          }),
+        ),
       ],
     );
   }
@@ -854,110 +989,158 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
         child: Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: LinearGradient(colors: [
-              kCard,
-              Color.fromRGBO(r.color.r.toInt(), r.color.g.toInt(),
-                  r.color.b.toInt(), 0.06),
-            ]),
-            borderRadius: BorderRadius.circular(18),
-            border: Border.all(
-                color: Color.fromRGBO(r.color.r.toInt(), r.color.g.toInt(),
-                    r.color.b.toInt(), 0.3)),
-          ),
-          child: Column(children: [
-            Row(children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: Color.fromRGBO(r.color.r.toInt(), r.color.g.toInt(),
-                      r.color.b.toInt(), 0.12),
-                  borderRadius: BorderRadius.circular(13),
-                  border: Border.all(
-                      color: Color.fromRGBO(r.color.r.toInt(),
-                          r.color.g.toInt(), r.color.b.toInt(), 0.3)),
+            gradient: LinearGradient(
+              colors: [
+                kCard,
+                Color.fromRGBO(
+                  r.color.r.toInt(),
+                  r.color.g.toInt(),
+                  r.color.b.toInt(),
+                  0.06,
                 ),
-                child: Center(
-                    child: Text(r.emoji, style: const TextStyle(fontSize: 21))),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                  child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(r.label,
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: r.color)),
-                  Text('${dist.toStringAsFixed(1)} km · ${r.eta}',
-                      style: const TextStyle(fontSize: 11, color: kMuted)),
-                ],
-              )),
-              Column(crossAxisAlignment: CrossAxisAlignment.end, children: [
-                Text('₹$fare',
-                    style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        color: r.color)),
-                const Text('Estimated',
-                    style: TextStyle(fontSize: 9, color: kMuted)),
-              ]),
-            ]),
-            const SizedBox(height: 12),
-            const Divider(color: kBorder),
-            const SizedBox(height: 10),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _chip('💳', 'Cash/UPI', kGreen),
-                _chip('⏱', r.eta, kPurple2),
-                _chip('⭐', '4.8+ Riders', kGold),
-                _chip('🗺️', 'OSM Tracked', kOrange),
               ],
             ),
-          ]),
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(
+              color: Color.fromRGBO(
+                r.color.r.toInt(),
+                r.color.g.toInt(),
+                r.color.b.toInt(),
+                0.3,
+              ),
+            ),
+          ),
+          child: Column(
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: Color.fromRGBO(
+                        r.color.r.toInt(),
+                        r.color.g.toInt(),
+                        r.color.b.toInt(),
+                        0.12,
+                      ),
+                      borderRadius: BorderRadius.circular(13),
+                      border: Border.all(
+                        color: Color.fromRGBO(
+                          r.color.r.toInt(),
+                          r.color.g.toInt(),
+                          r.color.b.toInt(),
+                          0.3,
+                        ),
+                      ),
+                    ),
+                    child:
+                        Center(child: Icon(r.icon, color: r.color, size: 24)),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          r.label,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w700,
+                            color: r.color,
+                          ),
+                        ),
+                        Text(
+                          '${dist.toStringAsFixed(1)} km · ${r.eta}',
+                          style: const TextStyle(fontSize: 11, color: kMuted),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Text(
+                        '₹$fare',
+                        style: TextStyle(
+                          fontSize: 24,
+                          fontWeight: FontWeight.w800,
+                          color: r.color,
+                        ),
+                      ),
+                      const Text(
+                        'Estimated',
+                        style: TextStyle(fontSize: 9, color: kMuted),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              const Divider(color: kBorder),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  _chip(Icons.payment, 'Cash/UPI', kGreen),
+                  _chip(Icons.timer, r.eta, kPurple2),
+                  _chip(Icons.star, '4.8+ Riders', kGold),
+                  _chip(Icons.map, 'OSM Tracked', kOrange),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _chip(String e, String t, Color c) => Column(children: [
-        Text(e, style: const TextStyle(fontSize: 15)),
-        const SizedBox(height: 3),
-        Text(t,
+  Widget _chip(IconData i, String t, Color c) => Column(
+        children: [
+          Icon(i, size: 18, color: c.withValues(alpha: 0.8)),
+          const SizedBox(height: 3),
+          Text(
+            t,
             style:
-                TextStyle(fontSize: 9, color: c, fontWeight: FontWeight.w600)),
-      ]);
+                TextStyle(fontSize: 9, color: c, fontWeight: FontWeight.w600),
+          ),
+        ],
+      );
 
   // ── RECENT PLACES ─────────────────────────────────────────────
   Widget _buildRecent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Row(children: [
-          Text('🕓', style: TextStyle(fontSize: 12)),
-          SizedBox(width: 6),
-          Text('RECENT PLACES',
+        const Row(
+          children: [
+            Icon(Icons.history, size: 14, color: kMuted),
+            SizedBox(width: 6),
+            Text(
+              'RECENT PLACES',
               style: TextStyle(
-                  fontSize: 10,
-                  color: kMuted,
-                  letterSpacing: 1.2,
-                  fontWeight: FontWeight.w700)),
-        ]),
+                fontSize: 10,
+                color: kMuted,
+                letterSpacing: 1.2,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
+        ),
         const SizedBox(height: 10),
-        ..._recentPlaces.map((p) => GestureDetector(
-              onTap: () => _fillPlace(p),
-              child: Container(
-                margin: const EdgeInsets.only(bottom: 8),
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: kCard,
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: kBorder),
-                ),
-                child: Row(children: [
+        ..._recentPlaces.map(
+          (p) => GestureDetector(
+            onTap: () => _fillPlace(p),
+            child: Container(
+              margin: const EdgeInsets.only(bottom: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: kCard,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: kBorder),
+              ),
+              child: Row(
+                children: [
                   Container(
                     width: 36,
                     height: 36,
@@ -966,29 +1149,36 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: kBorder),
                     ),
-                    child: Center(
-                        child:
-                            Text(p.icon, style: const TextStyle(fontSize: 17))),
+                    child:
+                        Center(child: Icon(p.icon, size: 20, color: kPurple2)),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
-                      child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(p.label,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          p.label,
                           style: GoogleFonts.notoSansTamil(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w600,
-                              color: kText)),
-                      Text(p.address,
+                            fontSize: 13,
+                            fontWeight: FontWeight.w600,
+                            color: kText,
+                          ),
+                        ),
+                        Text(
+                          p.address,
                           style: const TextStyle(fontSize: 10, color: kMuted),
-                          overflow: TextOverflow.ellipsis),
-                    ],
-                  )),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
                   const Icon(Icons.north_west, size: 14, color: kPurple2),
-                ]),
+                ],
               ),
-            )),
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -997,94 +1187,127 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
   Widget _buildPromo() {
     return GestureDetector(
       onTap: () async {
-        final uri = Uri.parse('https://wa.me/918681869091?text=' +
-            Uri.encodeComponent(
-                'NJ TECH Rider-ஆக join பண்ண விரும்புகிறேன்! 🏍️'));
+        final uri = Uri.parse(
+          'https://wa.me/918681869091?text=${Uri.encodeComponent('NJ TECH Rider-ஆக join பண்ண விரும்புகிறேன்! 🏍️')}',
+        );
         if (await canLaunchUrl(uri)) await launchUrl(uri);
       },
       child: Container(
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-              colors: [Color(0xFF1a1500), Color(0x14F5C542)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight),
+            colors: [Color(0xFF1a1500), Color(0x14F5C542)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: BorderRadius.circular(20),
           border: Border.all(color: const Color(0x59F5C542)),
         ),
-        child: Row(children: [
-          Expanded(
+        child: Row(
+          children: [
+            Expanded(
               child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              AnimatedBuilder(
-                animation: _pulseAnim,
-                builder: (_, __) => Transform.scale(
-                  scale: _pulseAnim.value,
-                  child: Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0x1AF5C542),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0x66F5C542)),
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  AnimatedBuilder(
+                    animation: _pulseAnim,
+                    builder: (_, __) => Transform.scale(
+                      scale: _pulseAnim.value,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 4,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0x1AF5C542),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(color: const Color(0x66F5C542)),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Container(
+                              width: 6,
+                              height: 6,
+                              decoration: const BoxDecoration(
+                                color: kGold,
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 5),
+                            const Text(
+                              'NOW HIRING — ERODE',
+                              style: TextStyle(
+                                fontSize: 9,
+                                color: kGold,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
-                    child: Row(mainAxisSize: MainAxisSize.min, children: [
-                      Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                              color: kGold, shape: BoxShape.circle)),
-                      const SizedBox(width: 5),
-                      const Text('NOW HIRING — ERODE',
-                          style: TextStyle(
-                              fontSize: 9,
-                              color: kGold,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.8)),
-                    ]),
                   ),
-                ),
-              ),
-              const SizedBox(height: 10),
-              Text('NJ TECH Rider\nஆவீர்களா? 🏍️',
-                  style: GoogleFonts.notoSansTamil(
+                  const SizedBox(height: 10),
+                  Text(
+                    'NJ TECH Rider\nஆவீர்களா? 🏍️',
+                    style: GoogleFonts.notoSansTamil(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
                       color: kText,
-                      height: 1.2)),
-              const SizedBox(height: 6),
-              Text(
-                  '₹500–₹1,000/day · Flexible timing\n'
-                  'உங்கள் bike → உங்கள் business!',
-                  style: GoogleFonts.notoSansTamil(
-                      fontSize: 11, color: kMuted, height: 1.5)),
-              const SizedBox(height: 12),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-                decoration: BoxDecoration(
-                  gradient:
-                      const LinearGradient(colors: [kGold, Color(0xFFD4961A)]),
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: const Text('Join Now →',
-                    style: TextStyle(
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Text(
+                    '₹500–₹1,000/day · Flexible timing\n'
+                    'உங்கள் bike → உங்கள் business!',
+                    style: GoogleFonts.notoSansTamil(
+                      fontSize: 11,
+                      color: kMuted,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [kGold, Color(0xFFD4961A)],
+                      ),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: const Text(
+                      'Join Now →',
+                      style: TextStyle(
                         fontSize: 12,
                         fontWeight: FontWeight.w700,
-                        color: Color(0xFF1a1500))),
+                        color: Color(0xFF1a1500),
+                      ),
+                    ),
+                  ),
+                ],
               ),
-            ],
-          )),
-          const SizedBox(width: 14),
-          const Column(children: [
-            Text('🏍️', style: TextStyle(fontSize: 52)),
-            SizedBox(height: 4),
-            Text('Erode',
-                style: TextStyle(
-                    fontSize: 10, color: kGold, fontWeight: FontWeight.w600)),
-          ]),
-        ]),
+            ),
+            const SizedBox(width: 14),
+            const Column(
+              children: [
+                Text('🏍️', style: TextStyle(fontSize: 52)),
+                SizedBox(height: 4),
+                Text(
+                  'Erode',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: kGold,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -1110,42 +1333,63 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
           height: 56,
           decoration: BoxDecoration(
             gradient: ready
-                ? LinearGradient(colors: [
-                    r.color,
-                    Color.fromRGBO(r.color.r.toInt(), r.color.g.toInt(),
-                        r.color.b.toInt(), 0.8)
-                  ])
+                ? LinearGradient(
+                    colors: [
+                      r.color,
+                      Color.fromRGBO(
+                        r.color.r.toInt(),
+                        r.color.g.toInt(),
+                        r.color.b.toInt(),
+                        0.8,
+                      ),
+                    ],
+                  )
                 : null,
             color: ready ? null : kCard2,
             borderRadius: BorderRadius.circular(18),
             border: Border.all(
-                color: ready
-                    ? Color.fromRGBO(r.color.r.toInt(), r.color.g.toInt(),
-                        r.color.b.toInt(), 0.5)
-                    : kBorder),
+              color: ready
+                  ? Color.fromRGBO(
+                      r.color.r.toInt(),
+                      r.color.g.toInt(),
+                      r.color.b.toInt(),
+                      0.5,
+                    )
+                  : kBorder,
+            ),
             boxShadow: ready
                 ? [
                     BoxShadow(
-                        color: Color.fromRGBO(r.color.r.toInt(),
-                            r.color.g.toInt(), r.color.b.toInt(), 0.4),
-                        blurRadius: 20,
-                        offset: const Offset(0, 6)),
+                      color: Color.fromRGBO(
+                        r.color.r.toInt(),
+                        r.color.g.toInt(),
+                        r.color.b.toInt(),
+                        0.4,
+                      ),
+                      blurRadius: 20,
+                      offset: const Offset(0, 6),
+                    ),
                   ]
                 : [],
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Text(r.emoji, style: const TextStyle(fontSize: 20)),
+              Icon(
+                r.icon,
+                size: 24,
+                color: ready ? const Color(0xFF1a1500) : kMuted,
+              ),
               const SizedBox(width: 10),
               Text(
                 ready
                     ? '${r.label} Book பண்ணு →'
                     : 'Location enter பண்ணுங்கள் 📍',
                 style: GoogleFonts.notoSansTamil(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w700,
-                    color: ready ? const Color(0xFF1a1500) : kMuted),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w700,
+                  color: ready ? const Color(0xFF1a1500) : kMuted,
+                ),
               ),
             ],
           ),
@@ -1183,8 +1427,11 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
 /// Static pin marker for pickup/drop
 class _PinMarker extends StatelessWidget {
   final Color color;
-  final String emoji;
-  const _PinMarker({required this.color, required this.emoji});
+  final IconData icon; // Changed from emoji to icon
+  const _PinMarker({
+    required this.color,
+    required this.icon,
+  }); // Changed from emoji to icon
 
   @override
   Widget build(BuildContext context) {
@@ -1196,27 +1443,53 @@ class _PinMarker extends StatelessWidget {
           height: 36,
           decoration: BoxDecoration(
             color: Color.fromRGBO(
-                color.r.toInt(), color.g.toInt(), color.b.toInt(), 0.2),
+              color.r.toInt(),
+              color.g.toInt(),
+              color.b.toInt(),
+              0.2,
+            ),
             shape: BoxShape.circle,
             border: Border.all(color: color, width: 2),
             boxShadow: [
               BoxShadow(
-                  color: Color.fromRGBO(
-                      color.r.toInt(), color.g.toInt(), color.b.toInt(), 0.55),
-                  blurRadius: 10,
-                  spreadRadius: 2)
+                color: Color.fromRGBO(
+                  color.r.toInt(),
+                  color.g.toInt(),
+                  color.b.toInt(),
+                  0.55,
+                ),
+                blurRadius: 10,
+                spreadRadius: 2,
+              ),
             ],
           ),
-          child:
-              Center(child: Text(emoji, style: const TextStyle(fontSize: 16))),
+          child: Center(
+            child: Icon(
+              icon,
+              size: 16,
+              color: color,
+            ),
+          ), // Changed from Text(emoji) to Icon(icon)
         ),
         Container(
-            width: 2,
-            height: 10,
-            color: Color.fromRGBO(
-                color.r.toInt(), color.g.toInt(), color.b.toInt(), 0.8)),
+          width: 2,
+          height: 10,
+          color: Color.fromRGBO(
+            color.r.toInt(),
+            color.g.toInt(),
+            color.b.toInt(),
+            0.8,
+          ),
+        ),
       ],
     );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(ColorProperty('color', color));
+    properties.add(DiagnosticsProperty<IconData>('icon', icon));
   }
 }
 
@@ -1226,6 +1499,12 @@ class _AnimatedRiderMarker extends StatefulWidget {
   const _AnimatedRiderMarker({required this.color});
   @override
   State<_AnimatedRiderMarker> createState() => _AnimatedRiderMarkerState();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(ColorProperty('color', color));
+  }
 }
 
 class _AnimatedRiderMarkerState extends State<_AnimatedRiderMarker>
@@ -1238,7 +1517,7 @@ class _AnimatedRiderMarkerState extends State<_AnimatedRiderMarker>
     super.initState();
     _c = AnimationController(vsync: this, duration: const Duration(seconds: 1))
       ..repeat(reverse: true);
-    _a = Tween<double>(begin: 0.6, end: 1.0)
+    _a = Tween<double>(begin: 0.6, end: 1)
         .animate(CurvedAnimation(parent: _c, curve: Curves.easeInOut));
   }
 
@@ -1256,19 +1535,25 @@ class _AnimatedRiderMarkerState extends State<_AnimatedRiderMarker>
         width: 42,
         height: 42,
         decoration: BoxDecoration(
-          color: Color.fromRGBO(widget.color.r.toInt(), widget.color.g.toInt(),
-              widget.color.b.toInt(), _a.value * 0.2),
+          color: Color.fromRGBO(
+            widget.color.r.toInt(),
+            widget.color.g.toInt(),
+            widget.color.b.toInt(),
+            _a.value * 0.2,
+          ),
           shape: BoxShape.circle,
           border: Border.all(color: widget.color, width: 2),
           boxShadow: [
             BoxShadow(
-                color: Color.fromRGBO(
-                    widget.color.r.toInt(),
-                    widget.color.g.toInt(),
-                    widget.color.b.toInt(),
-                    _a.value * 0.65),
-                blurRadius: 14,
-                spreadRadius: 3)
+              color: Color.fromRGBO(
+                widget.color.r.toInt(),
+                widget.color.g.toInt(),
+                widget.color.b.toInt(),
+                _a.value * 0.65,
+              ),
+              blurRadius: 14,
+              spreadRadius: 3,
+            ),
           ],
         ),
         child: const Center(child: Text('🏍️', style: TextStyle(fontSize: 20))),
@@ -1284,21 +1569,36 @@ class _NearbyDot extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: Color.fromRGBO(
-            color.r.toInt(), color.g.toInt(), color.b.toInt(), 0.9),
+          color.r.toInt(),
+          color.g.toInt(),
+          color.b.toInt(),
+          0.9,
+        ),
         shape: BoxShape.circle,
         boxShadow: [
           BoxShadow(
-              color: Color.fromRGBO(
-                  color.r.toInt(), color.g.toInt(), color.b.toInt(), 0.6),
-              blurRadius: 6,
-              spreadRadius: 1)
+            color: Color.fromRGBO(
+              color.r.toInt(),
+              color.g.toInt(),
+              color.b.toInt(),
+              0.6,
+            ),
+            blurRadius: 6,
+            spreadRadius: 1,
+          ),
         ],
       ),
       child: const Center(child: Text('🏍', style: TextStyle(fontSize: 11))),
     );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(ColorProperty('color', color));
   }
 }
 
@@ -1307,9 +1607,9 @@ class _NearbyDot extends StatelessWidget {
 // ================================================================
 class _BookSheet extends StatefulWidget {
   final _RideType ride;
-  final String    pickup;
-  final String    drop;
-  final double    distKm;
+  final String pickup;
+  final String drop;
+  final double distKm;
 
   const _BookSheet({
     required this.ride,
@@ -1320,18 +1620,26 @@ class _BookSheet extends StatefulWidget {
 
   @override
   State<_BookSheet> createState() => _BookSheetState();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<_RideType>('ride', ride));
+    properties.add(StringProperty('pickup', pickup));
+    properties.add(StringProperty('drop', drop));
+    properties.add(DoubleProperty('distKm', distKm));
+  }
 }
 
 class _BookSheetState extends State<_BookSheet> {
-
-  bool   _confirming   = false;
-  bool   _waitingRider = false;
-  bool   _accepted     = false;
-  bool   _completed    = false;
-  String _rideDocId    = '';
-  String _captainName  = '';
+  bool _confirming = false;
+  bool _waitingRider = false;
+  bool _accepted = false;
+  bool _completed = false;
+  String _rideDocId = '';
+  String _captainName = '';
   String _captainPhone = '';
-  String _eta          = '';
+  String _eta = '';
   double? _captLat;
   double? _captLng;
   int _rating = 0;
@@ -1342,103 +1650,101 @@ class _BookSheetState extends State<_BookSheet> {
     setState(() => _confirming = true);
     try {
       final doc = await FirebaseFirestore.instance.collection('rides').add({
-        'pickup':        widget.pickup,
-        'drop':          widget.drop,
-        'distKm':        widget.distKm,
-        'fare':          _fare,
-        'rideType':      widget.ride.label,
-        'status':        'pending',
+        'pickup': widget.pickup,
+        'drop': widget.drop,
+        'distKm': widget.distKm,
+        'fare': _fare,
+        'rideType': widget.ride.label,
+        'status': 'pending',
         'customerPhone': FirebaseAuth.instance.currentUser?.phoneNumber ?? '',
-        'createdAt':     FieldValue.serverTimestamp(),
-        'acceptedAt':    null,
-        'captainId':     null,
-        'captainName':   null,
+        'createdAt': FieldValue.serverTimestamp(),
+        'acceptedAt': null,
+        'captainId': null,
+        'captainName': null,
       });
 
       // Task 3: Trigger push notification via Firestore collection
       await FirebaseFirestore.instance.collection('notifications').add({
-        'type':      'new_ride',
-        'rideId':    doc.id,
-        'pickup':    widget.pickup,
-        'drop':      widget.drop,
-        'fare':      _fare,
+        'type': 'new_ride',
+        'rideId': doc.id,
+        'pickup': widget.pickup,
+        'drop': widget.drop,
+        'fare': _fare,
         'createdAt': FieldValue.serverTimestamp(),
-        'read':      false,
+        'read': false,
       });
       setState(() {
-        _rideDocId   = doc.id;
-        _confirming  = false;
+        _rideDocId = doc.id;
+        _confirming = false;
         _waitingRider = true;
       });
       // Listen for real-time status changes
       FirebaseFirestore.instance
-        .collection('rides')
-        .doc(doc.id)
-        .snapshots()
-        .listen((snap) {
-          if (!mounted || !snap.exists) return;
-          final data   = snap.data() as Map<String, dynamic>;
-          final status = data['status'] as String? ?? 'pending';
-          if (status == 'accepted' && !_accepted) {
-            setState(() {
-              _accepted     = true;
-              _waitingRider = false;
-              _captainName  = data['captainName']  as String? ?? 'NJ TECH Rider';
-              _captainPhone = data['captainPhone'] as String? ?? '';
-              _eta          = data['eta']          as String? ?? '5 min';
-            });
-          }
-          if (_accepted) {
-            setState(() {
-              _captLat = data['captainLat'] as double?;
-              _captLng = data['captainLng'] as double?;
-            });
-          }
-          if (status == 'completed' && !_completed) {
-            setState(() { _completed = true; _accepted = false; });
-          }
-        });
+          .collection('rides')
+          .doc(doc.id)
+          .snapshots()
+          .listen((snap) {
+        if (!mounted || !snap.exists) return;
+        final data = snap.data()!;
+        final status = data['status'] as String? ?? 'pending';
+        if (status == 'accepted' && !_accepted) {
+          setState(() {
+            _accepted = true;
+            _waitingRider = false;
+            _captainName = data['captainName'] as String? ?? 'NJ TECH Rider';
+            _captainPhone = data['captainPhone'] as String? ?? '';
+            _eta = data['eta'] as String? ?? '5 min';
+          });
+        }
+        if (_accepted) {
+          setState(() {
+            _captLat = data['captainLat'] as double?;
+            _captLng = data['captainLng'] as double?;
+          });
+        }
+        if (status == 'completed' && !_completed) {
+          setState(() {
+            _completed = true;
+            _accepted = false;
+          });
+        }
+      });
     } catch (e) {
       setState(() => _confirming = false);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Error: $e'),
-        backgroundColor: const Color(0xFFE05555),
-        behavior: SnackBarBehavior.floating));
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error: $e'),
+          backgroundColor: const Color(0xFFE05555),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
     }
   }
 
   Future<void> _cancelRide() async {
     if (_rideDocId.isEmpty) return;
     await FirebaseFirestore.instance
-      .collection('rides').doc(_rideDocId)
-      .update({'status': 'cancelled'});
+        .collection('rides')
+        .doc(_rideDocId)
+        .update({'status': 'cancelled'});
     if (mounted) Navigator.pop(context);
   }
 
   Future<void> _payUPI() async {
-    final upiUrl = Uri.parse(
-      'upi://pay?'
-      'pa=njtech@upi'
-      '&pn=NJ%20TECH%20Erode'
-      '&am=$_fare'
-      '&cu=INR'
-      '&tn=Erode%20Bike%20Taxi%20Ride'
-      '&mode=02',
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => PaymentScreen(
+          amount: _fare.toDouble(),
+          note: 'Bike Taxi Ride',
+          orderId: _rideDocId.isNotEmpty ? _rideDocId : null,
+        ),
+      ),
     );
-    if (await canLaunchUrl(upiUrl)) {
-      await launchUrl(upiUrl, mode: LaunchMode.externalApplication);
-      if (_rideDocId.isNotEmpty) {
-        await FirebaseFirestore.instance
-          .collection('rides').doc(_rideDocId)
-          .update({'paymentStatus': 'upi_initiated'});
-      }
-    } else {
-      await launchUrl(Uri.parse('https://pay.google.com'));
-    }
   }
 
-  void _callCaptain() async {
+  Future<void> _callCaptain() async {
     if (_captainPhone.isEmpty) return;
     final uri = Uri.parse('tel:$_captainPhone');
     if (await canLaunchUrl(uri)) await launchUrl(uri);
@@ -1447,290 +1753,545 @@ class _BookSheetState extends State<_BookSheet> {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding:
+          EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
       child: Container(
         padding: const EdgeInsets.fromLTRB(20, 10, 20, 30),
         decoration: const BoxDecoration(
           color: kCard2,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Container(width: 40, height: 4,
-            margin: const EdgeInsets.only(bottom: 18),
-            decoration: BoxDecoration(
-              color: kBorder, borderRadius: BorderRadius.circular(2))),
-          _summaryRow(),
-          const SizedBox(height: 14),
-          const Divider(color: kBorder),
-          const SizedBox(height: 10),
-          _locRow('🟢', 'Pickup', widget.pickup),
-          const SizedBox(height: 8),
-          _locRow('🟠', 'Drop',   widget.drop),
-          const SizedBox(height: 18),
-          if (_completed)      _completedView()
-          else if (_accepted)  _acceptedView()
-          else if (_waitingRider) _waitingView()
-          else                 _confirmView(),
-        ]),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: 18),
+              decoration: BoxDecoration(
+                color: kBorder,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            _summaryRow(),
+            const SizedBox(height: 14),
+            const Divider(color: kBorder),
+            const SizedBox(height: 10),
+            _locRow('🟢', 'Pickup', widget.pickup),
+            const SizedBox(height: 8),
+            _locRow('🟠', 'Drop', widget.drop),
+            const SizedBox(height: 18),
+            if (_completed)
+              _completedView()
+            else if (_accepted)
+              _acceptedView()
+            else if (_waitingRider)
+              _waitingView()
+            else
+              _confirmView(),
+          ],
+        ),
       ),
     );
   }
 
   Widget _summaryRow() {
     final r = widget.ride;
-    return Row(children: [
-      Container(
-        width: 50, height: 50,
-        decoration: BoxDecoration(
-          color: Color.fromRGBO(r.color.r.toInt(),r.color.g.toInt(),r.color.b.toInt(),0.12),
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Color.fromRGBO(r.color.r.toInt(),r.color.g.toInt(),r.color.b.toInt(),0.3))),
-        child: Center(child: Text(r.emoji, style: const TextStyle(fontSize: 24))),
-      ),
-      const SizedBox(width: 12),
-      Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(r.label, style: TextStyle(fontSize:16, fontWeight:FontWeight.w700, color:r.color)),
-        Text('${widget.distKm.toStringAsFixed(1)} km · ${r.eta}',
-          style: const TextStyle(fontSize:11, color:kMuted)),
-      ])),
-      Text('₹$_fare', style: TextStyle(fontSize:24, fontWeight:FontWeight.w800, color:r.color)),
-    ]);
-  }
-
-  Widget _confirmView() => Column(mainAxisSize: MainAxisSize.min, children: [
-    const Text('Map-ல route ready · Confirm பண்ணி Captain-ஐ கண்டுபிடி!',
-      style: TextStyle(fontSize:12, color:kMuted), textAlign:TextAlign.center),
-    const SizedBox(height: 16),
-    SizedBox(width: double.infinity, height: 52,
-      child: ElevatedButton(
-        onPressed: _confirming ? null : _confirmRide,
-        style: ElevatedButton.styleFrom(
-          backgroundColor: widget.ride.color,
-          foregroundColor: const Color(0xFF1a1500),
-          disabledBackgroundColor: const Color(0x99F5C542),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-          elevation: 0),
-        child: _confirming
-          ? const SizedBox(width:22, height:22,
-              child: CircularProgressIndicator(color: Color(0xFF1a1500), strokeWidth:2))
-          : Text('Confirm & Captain தேடு 🏍️', style: GoogleFonts.notoSansTamil(
-              fontSize:15, fontWeight:FontWeight.w700)),
-      )),
-  ]);
-
-  Widget _waitingView() => Column(mainAxisSize: MainAxisSize.min, children: [
-    Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0x1A7B6FE0),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x407B6FE0))),
-      child: Row(children: [
-        const SizedBox(width:20, height:20,
-          child: CircularProgressIndicator(color: Color(0xFF9B8FF0), strokeWidth:2)),
-        const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Captain தேடுகிறோம்...', style: GoogleFonts.notoSansTamil(
-            fontSize:13, fontWeight:FontWeight.w600, color:kText)),
-          Text('Ride ID: ${_rideDocId.length > 8 ? _rideDocId.substring(0,8) : _rideDocId}...',
-            style: const TextStyle(fontSize:9, color:kMuted)),
-        ])),
+    return Row(
+      children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal:8, vertical:4),
+          width: 50,
+          height: 50,
           decoration: BoxDecoration(
-            color: const Color(0x1A3DBA6F),
-            borderRadius: BorderRadius.circular(20),
-            border: Border.all(color: const Color(0x663DBA6F))),
-          child: const Text('LIVE', style: TextStyle(
-            fontSize:8, color:kGreen, fontWeight:FontWeight.w800, letterSpacing:1))),
-      ]),
-    ),
-    const SizedBox(height: 10),
-    TextButton(
-      onPressed: _cancelRide,
-      child: const Text('Cancel Ride',
-        style: TextStyle(color: Color(0xFFE05555), fontSize:12))),
-  ]);
-
-  Widget _acceptedView() => Column(mainAxisSize: MainAxisSize.min, children: [
-    Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: const Color(0x0F3DBA6F),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x4D3DBA6F))),
-      child: Row(children: [
-        const Text('🏍️', style: TextStyle(fontSize:28)),
-        const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text(_captainName, style: const TextStyle(
-            fontSize:13, fontWeight:FontWeight.w700, color:kText)),
-          Text('ETA: $_eta · OSM Tracked',
-            style: const TextStyle(fontSize:10, color:kGreen)),
-        ])),
-        if (_captainPhone.isNotEmpty)
-          GestureDetector(
-            onTap: _callCaptain,
-            child: Container(
-              width:36, height:36,
-              decoration: BoxDecoration(
-                color: const Color(0x1A3DBA6F),
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0x4D3DBA6F))),
-              child: const Icon(Icons.phone, size:18, color:kGreen))),
-      ]),
-    ),
-    if (_captLat != null && _captLng != null) ...[
-      const SizedBox(height: 14),
-      Container(
-        height: 200,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: kBorder)),
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(16),
-          child: FlutterMap(
-            options: MapOptions(
-              initialCenter: LatLng(_captLat!, _captLng!),
-              initialZoom: 14,
+            color: Color.fromRGBO(
+              r.color.r.toInt(),
+              r.color.g.toInt(),
+              r.color.b.toInt(),
+              0.12,
             ),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: Color.fromRGBO(
+                r.color.r.toInt(),
+                r.color.g.toInt(),
+                r.color.b.toInt(),
+                0.3,
+              ),
+            ),
+          ),
+          child: Center(child: Icon(r.icon, size: 24, color: r.color)),
+        ),
+        const SizedBox(width: 12),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              TileLayer(
-                urlTemplate: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-                subdomains: const ['a', 'b', 'c', 'd'],
+              Text(
+                r.label,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w700,
+                  color: r.color,
+                ),
               ),
-              PolylineLayer(
-                polylines: [
-                  Polyline(
-                    points: [LatLng(_captLat!, _captLng!), LatLng(11.3520, 77.7280)], // Drop
-                    color: kPurple,
-                    strokeWidth: 3,
-                  ),
-                ],
-              ),
-              MarkerLayer(
-                markers: [
-                  Marker(
-                    point: LatLng(11.3520, 77.7280),
-                    width: 30, height: 30,
-                    child: const Text('🏁', style: TextStyle(fontSize: 20))),
-                  Marker(
-                    point: LatLng(_captLat!, _captLng!),
-                    width: 40, height: 40,
-                    child: Container(
-                      decoration: const BoxDecoration(color: kGold, shape: BoxShape.circle),
-                      child: const Center(child: Text('🏍️', style: TextStyle(fontSize: 18))))),
-                ],
+              Text(
+                '${widget.distKm.toStringAsFixed(1)} km · ${r.eta}',
+                style: const TextStyle(fontSize: 11, color: kMuted),
               ),
             ],
           ),
         ),
-      ),
-    ],
-    const SizedBox(height: 10),
-    const Text('Captain வரும் வரை wait பண்ணுங்க!',
-      style: TextStyle(fontSize: 11, color: kMuted)),
-  ]);
-
-  Widget _completedView() => Column(mainAxisSize: MainAxisSize.min, children: [
-    Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(colors:[Color(0x1A3DBA6F), Color(0x1AF5C542)]),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0x4D3DBA6F))),
-      child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const Text('🎉', style: TextStyle(fontSize:28)),
-        const SizedBox(width: 12),
-        Expanded(child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Ride Complete!', style: GoogleFonts.notoSansTamil(
-            fontSize:16, fontWeight:FontWeight.w800, color:kGreen)),
-          const Text('இப்போ pay பண்ணுங்க!',
-            style: TextStyle(fontSize:11, color:kMuted)),
-        ])),
-        Text('₹$_fare', style: const TextStyle(
-          fontSize:22, fontWeight:FontWeight.w800, color:kGold)),
-      ]),
-    ),
-    const SizedBox(height: 14),
-    // UPI Payment Button — Zero gateway fees!
-    GestureDetector(
-      onTap: _payUPI,
-      child: Container(
-        width: double.infinity, height: 58,
-        decoration: BoxDecoration(
-          gradient: const LinearGradient(colors:[Color(0xFF1A73E8), Color(0xFF1557B0)]),
-          borderRadius: BorderRadius.circular(18),
-          boxShadow: const [BoxShadow(
-            color: Color(0x661A73E8), blurRadius:16, offset: Offset(0,6))]),
-        child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-          Container(
-            width:36, height:36,
-            decoration: BoxDecoration(
-              color: Colors.white, borderRadius: BorderRadius.circular(10)),
-            child: const Center(child: Text('₹', style: TextStyle(
-              fontSize:18, fontWeight:FontWeight.w900, color: Color(0xFF1A73E8))))),
-          const SizedBox(width: 12),
-          Column(mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Pay ₹$_fare via UPI', style: GoogleFonts.notoSansTamil(
-                fontSize:16, fontWeight:FontWeight.w700, color:Colors.white)),
-              const Text('GPay · PhonePe · Paytm · BHIM',
-                style: TextStyle(fontSize:9, color: Color(0xCCFFFFFF))),
-            ]),
-          const SizedBox(width:8),
-          const Icon(Icons.arrow_forward_ios, size:14, color:Colors.white),
-        ]),
-      ),
-    ),
-    const SizedBox(height: 6),
-    const Text('Zero gateway fees · Opens your UPI app directly',
-      style: TextStyle(fontSize:9, color:kMuted), textAlign:TextAlign.center),
-    _ratingWidget(),
-  ]);
-
-  Widget _ratingWidget() {
-    return Column(children: [
-      const SizedBox(height: 14),
-      const Text('Ride எப்படி இருந்தது?',
-        style: TextStyle(fontSize: 14, color: kText, fontWeight: FontWeight.w600)),
-      const SizedBox(height: 10),
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: List.generate(5, (i) => GestureDetector(
-          onTap: () async {
-            setState(() => _rating = i + 1);
-            if (_rideDocId.isNotEmpty) {
-              await FirebaseFirestore.instance
-                .collection('rides').doc(_rideDocId)
-                .update({'customerRating': i + 1});
-            }
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 6),
-            child: Text(
-              i < _rating ? '⭐' : '☆',
-              style: const TextStyle(fontSize: 32)),
+        Text(
+          '₹$_fare',
+          style: TextStyle(
+            fontSize: 24,
+            fontWeight: FontWeight.w800,
+            color: r.color,
           ),
-        )),
-      ),
-      if (_rating > 0)
-        Padding(
-          padding: const EdgeInsets.only(top: 8),
-          child: Text('நன்றி! $_rating star கொடுத்தீங்க 🙏',
-            style: const TextStyle(fontSize: 12, color: kGreen))),
-    ]);
+        ),
+      ],
+    );
   }
 
-  Widget _locRow(String dot, String lbl, String txt) =>
-    Row(children: [
-      Text(dot, style: const TextStyle(fontSize:12)),
-      const SizedBox(width:10),
-      Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-        Text(lbl, style: const TextStyle(fontSize:9, color:kMuted,
-          letterSpacing:0.8, fontWeight:FontWeight.w600)),
-        Text(txt, style: const TextStyle(fontSize:13, color:kText,
-          fontWeight:FontWeight.w500)),
-      ]),
-    ]);
+  Widget _confirmView() => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            'Map-ல route ready · Confirm பண்ணி Captain-ஐ கண்டுபிடி!',
+            style: TextStyle(fontSize: 12, color: kMuted),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 16),
+          SizedBox(
+            width: double.infinity,
+            height: 52,
+            child: ElevatedButton(
+              onPressed: _confirming ? null : _confirmRide,
+              style: ElevatedButton.styleFrom(
+                backgroundColor: widget.ride.color,
+                foregroundColor: const Color(0xFF1a1500),
+                disabledBackgroundColor: const Color(0x99F5C542),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                elevation: 0,
+              ),
+              child: _confirming
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(
+                        color: Color(0xFF1a1500),
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Text(
+                      'Confirm & Captain தேடு 🏍️',
+                      style: GoogleFonts.notoSansTamil(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+            ),
+          ),
+        ],
+      );
+
+  Widget _waitingView() => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0x1A7B6FE0),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0x407B6FE0)),
+            ),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    color: Color(0xFF9B8FF0),
+                    strokeWidth: 2,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Captain தேடுகிறோம்...',
+                        style: GoogleFonts.notoSansTamil(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                          color: kText,
+                        ),
+                      ),
+                      Text(
+                        'Ride ID: ${_rideDocId.length > 8 ? _rideDocId.substring(0, 8) : _rideDocId}...',
+                        style: const TextStyle(fontSize: 9, color: kMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0x1A3DBA6F),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(color: const Color(0x663DBA6F)),
+                  ),
+                  child: const Text(
+                    'LIVE',
+                    style: TextStyle(
+                      fontSize: 8,
+                      color: kGreen,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 10),
+          TextButton(
+            onPressed: _cancelRide,
+            child: const Text(
+              'Cancel Ride',
+              style: TextStyle(color: Color(0xFFE05555), fontSize: 12),
+            ),
+          ),
+        ],
+      );
+
+  Widget _acceptedView() => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              color: const Color(0x0F3DBA6F),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: const Color(0x4D3DBA6F)),
+            ),
+            child: Row(
+              children: [
+                const Text('🏍️', style: TextStyle(fontSize: 28)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _captainName,
+                        style: const TextStyle(
+                          fontSize: 13,
+                          fontWeight: FontWeight.w700,
+                          color: kText,
+                        ),
+                      ),
+                      Text(
+                        'ETA: $_eta · OSM Tracked',
+                        style: const TextStyle(fontSize: 10, color: kGreen),
+                      ),
+                    ],
+                  ),
+                ),
+                if (_captainPhone.isNotEmpty)
+                  GestureDetector(
+                    onTap: _callCaptain,
+                    child: Container(
+                      width: 36,
+                      height: 36,
+                      decoration: BoxDecoration(
+                        color: const Color(0x1A3DBA6F),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: const Color(0x4D3DBA6F)),
+                      ),
+                      child: const Icon(Icons.phone, size: 18, color: kGreen),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          if (_captLat != null && _captLng != null) ...[
+            const SizedBox(height: 14),
+            Container(
+              height: 200,
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: kBorder),
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: FlutterMap(
+                  options: MapOptions(
+                    initialCenter: LatLng(_captLat!, _captLng!),
+                    initialZoom: 14,
+                  ),
+                  children: [
+                    TileLayer(
+                      urlTemplate:
+                          'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+                      subdomains: const ['a', 'b', 'c', 'd'],
+                    ),
+                    PolylineLayer(
+                      polylines: [
+                        Polyline(
+                          points: [
+                            LatLng(_captLat!, _captLng!),
+                            const LatLng(11.3520, 77.7280),
+                          ], // Drop
+                          color: kPurple,
+                          strokeWidth: 3,
+                        ),
+                      ],
+                    ),
+                    MarkerLayer(
+                      markers: [
+                        const Marker(
+                          point: LatLng(11.3520, 77.7280),
+                          child: Text('🏁', style: TextStyle(fontSize: 20)),
+                        ),
+                        Marker(
+                          point: LatLng(_captLat!, _captLng!),
+                          width: 40,
+                          height: 40,
+                          child: const DecoratedBox(
+                            decoration: BoxDecoration(
+                              color: kGold,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Center(
+                              child: Text(
+                                '🏍️',
+                                style: TextStyle(fontSize: 18),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+          const SizedBox(height: 10),
+          const Text(
+            'Captain வரும் வரை wait பண்ணுங்க!',
+            style: TextStyle(fontSize: 11, color: kMuted),
+          ),
+        ],
+      );
+
+  Widget _completedView() => Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [Color(0x1A3DBA6F), Color(0x1AF5C542)],
+              ),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0x4D3DBA6F)),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Text('🎉', style: TextStyle(fontSize: 28)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Ride Complete!',
+                        style: GoogleFonts.notoSansTamil(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w800,
+                          color: kGreen,
+                        ),
+                      ),
+                      const Text(
+                        'இப்போ pay பண்ணுங்க!',
+                        style: TextStyle(fontSize: 11, color: kMuted),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  '₹$_fare',
+                  style: const TextStyle(
+                    fontSize: 22,
+                    fontWeight: FontWeight.w800,
+                    color: kGold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 14),
+          // UPI Payment Button — Zero gateway fees!
+          GestureDetector(
+            onTap: _payUPI,
+            child: Container(
+              width: double.infinity,
+              height: 58,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [Color(0xFF1A73E8), Color(0xFF1557B0)],
+                ),
+                borderRadius: BorderRadius.circular(18),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x661A73E8),
+                    blurRadius: 16,
+                    offset: Offset(0, 6),
+                  ),
+                ],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                    child: const Center(
+                      child: Text(
+                        '₹',
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w900,
+                          color: Color(0xFF1A73E8),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Pay ₹$_fare via UPI',
+                        style: GoogleFonts.notoSansTamil(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w700,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const Text(
+                        'GPay · PhonePe · Paytm · BHIM',
+                        style: TextStyle(fontSize: 9, color: Color(0xCCFFFFFF)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(width: 8),
+                  const Icon(
+                    Icons.arrow_forward_ios,
+                    size: 14,
+                    color: Colors.white,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 6),
+          const Text(
+            'Zero gateway fees · Opens your UPI app directly',
+            style: TextStyle(fontSize: 9, color: kMuted),
+            textAlign: TextAlign.center,
+          ),
+          _ratingWidget(),
+        ],
+      );
+
+  Widget _ratingWidget() {
+    return Column(
+      children: [
+        const SizedBox(height: 14),
+        const Text(
+          'Ride எப்படி இருந்தது?',
+          style: TextStyle(
+            fontSize: 14,
+            color: kText,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: List.generate(
+            5,
+            (i) => GestureDetector(
+              onTap: () async {
+                setState(() => _rating = i + 1);
+                if (_rideDocId.isNotEmpty) {
+                  await FirebaseFirestore.instance
+                      .collection('rides')
+                      .doc(_rideDocId)
+                      .update({'customerRating': i + 1});
+                }
+              },
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 6),
+                child: Text(
+                  i < _rating ? '⭐' : '☆',
+                  style: const TextStyle(fontSize: 32),
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (_rating > 0)
+          Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Text(
+              'நன்றி! $_rating star கொடுத்தீங்க 🙏',
+              style: const TextStyle(fontSize: 12, color: kGreen),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _locRow(String dot, String lbl, String txt) => Row(
+        children: [
+          Text(dot, style: const TextStyle(fontSize: 12)),
+          const SizedBox(width: 10),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                lbl,
+                style: const TextStyle(
+                  fontSize: 9,
+                  color: kMuted,
+                  letterSpacing: 0.8,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                txt,
+                style: const TextStyle(
+                  fontSize: 13,
+                  color: kText,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
 }

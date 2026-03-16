@@ -1,5 +1,5 @@
 // ================================================================
-// நம்ம குரு AI — main.dart  v4.0  ★ ERODE SUPER APP EDITION ★
+// Allin1 Super App — main.dart  v4.0
 // Dashboard + Voice Chat + Commerce Cards + WhatsApp Share
 // Surgically upgraded by NJ TECH — Zero breakage, Full pivot.
 //
@@ -19,21 +19,36 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/services.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hive_flutter/hive_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'firebase_options.dart';
 
-import 'models/api_models.dart';
+import 'firebase_options.dart';
+import 'models/api_models.dart' as api;
+import 'providers/cart_provider.dart';
 import 'screens/bike_taxi_screen.dart';
+import 'screens/captain_document_screen.dart';
 import 'screens/captain_screen.dart';
+import 'screens/cart_screen.dart';
+import 'screens/dashboard_screen.dart' as SuperDash;
+import 'screens/landing_screen.dart';
 import 'screens/login_screen.dart';
-import 'services/api_service.dart';
+import 'screens/notifications_screen.dart';
+import 'screens/order_tracking_screen.dart';
+import 'screens/payment_screen.dart';
+import 'screens/profile_screen.dart';
 import 'screens/ride_history_screen.dart';
+import 'screens/rider_screen.dart';
+import 'screens/seller_screen.dart';
+import 'screens/settings_screen.dart';
+import 'screens/admin_dashboard_screen.dart';
+import 'screens/admin/credentials_admin_screen.dart';
+import 'screens/role_login_screen.dart';
+import 'services/api_service.dart';
 
 // ── Constants ────────────────────────────────────────────────────
 const String kBackendUrl = 'https://nijamdeen-kutty-guru-api.hf.space/chat';
@@ -42,7 +57,7 @@ const String kBackendUrl = 'https://nijamdeen-kutty-guru-api.hf.space/chat';
 // Injected as 'system' field in every API call.
 // Your HF backend can read this and override the default persona.
 const String kSalesSystemPrompt =
-    'You are "Erode\'s All-in-One Sales Assistant" by NJ TECH. '
+    'You are the "Allin1 Sales Assistant" by NJ TECH. '
     'Help customers order from: 🍔 Food Delivery (16th Road specials), '
     '🍅 Grocery (Erode Fresh), 📱 Tech Accessories (NJ TECH store), '
     '🚕 Bike Taxi (local Erode rides). '
@@ -125,23 +140,26 @@ class CommerceCard {
 // ── Static Data ──────────────────────────────────────────────────
 const List<MarketRate> kMarketRates = [
   MarketRate(
-      emoji: '🟡',
-      name: 'மஞ்சள்',
-      price: '₹9,400/kg',
-      change: '▲ 2.1%',
-      isUp: true,),
+    emoji: '🟡',
+    name: 'மஞ்சள்',
+    price: '₹9,400/kg',
+    change: '▲ 2.1%',
+    isUp: true,
+  ),
   MarketRate(
-      emoji: '🥥',
-      name: 'தேங்காய்',
-      price: '₹28/pc',
-      change: '▼ 0.5%',
-      isUp: false,),
+    emoji: '🥥',
+    name: 'தேங்காய்',
+    price: '₹28/pc',
+    change: '▼ 0.5%',
+    isUp: false,
+  ),
   MarketRate(
-      emoji: '🌿',
-      name: 'கொத்தமல்லி',
-      price: '₹120/kg',
-      change: '▲ 1.3%',
-      isUp: true,),
+    emoji: '🌿',
+    name: 'கொத்தமல்லி',
+    price: '₹120/kg',
+    change: '▲ 1.3%',
+    isUp: true,
+  ),
 ];
 
 // ── [CHANGE 2] 4 Commerce categories replace the SOON cards ──────
@@ -198,7 +216,8 @@ void main() async {
 
   // Initialize API Service with Qwen token
   await ApiService.instance.initialize(
-    qwenToken: 'dmy2Te5qdGLItvvG9_xegryBQmO8Ksfn9XI8_r_0NuTKNoVLF0JGsLg54HqZySQ03_Y1o2c11Q46vqjY485fpw',
+    qwenToken:
+        'dmy2Te5qdGLItvvG9_xegryBQmO8Ksfn9XI8_r_0NuTKNoVLF0JGsLg54HqZySQ03_Y1o2c11Q46vqjY485fpw',
   );
 
   try {
@@ -213,24 +232,35 @@ void main() async {
     await FirebaseAuth.instance.setPersistence(Persistence.LOCAL);
   }
 
-  SystemChrome.setSystemUIOverlayStyle(const SystemUiOverlayStyle(
-    statusBarColor: Colors.transparent,
-    statusBarIconBrightness: Brightness.light,
-  ),);
+  SystemChrome.setSystemUIOverlayStyle(
+    const SystemUiOverlayStyle(
+      statusBarColor: Colors.transparent,
+      statusBarIconBrightness: Brightness.light,
+    ),
+  );
 
-  runApp(const NammaGuruApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider<CartProvider>(
+          create: (_) => CartProvider(),
+        ),
+      ],
+      child: const Allin1App(),
+    ),
+  );
 }
 
 // ================================================================
-// CLASS 1 — NammaGuruApp
+// CLASS 1 — Allin1App
 // ================================================================
-class NammaGuruApp extends StatelessWidget {
-  const NammaGuruApp({super.key});
+class Allin1App extends StatelessWidget {
+  const Allin1App({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Erode Super App',
+      title: 'Allin1 Super App',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         brightness: Brightness.dark,
@@ -241,18 +271,45 @@ class NammaGuruApp extends StatelessWidget {
           ThemeData.dark().textTheme,
         ),
       ),
-      home: StreamBuilder<User?>(
-        stream: FirebaseAuth.instance.authStateChanges(),
-        builder: (context, snap) {
-          if (snap.connectionState == ConnectionState.waiting) {
-            return const SplashScreen();
-          }
-          if (snap.hasData) {
-            return const SplashScreen(); // Show splash then Dashboard
-          }
-          return const LoginScreen();
+      home: kIsWeb
+          ? const LandingScreen()
+          : StreamBuilder<User?>(
+              stream: FirebaseAuth.instance.authStateChanges(),
+              builder: (context, snap) {
+                if (snap.connectionState == ConnectionState.waiting) {
+                  return const SplashScreen();
+                }
+                if (snap.hasData) {
+                  return const SplashScreen(); // Show splash then Dashboard
+                }
+                return const LoginScreen();
+              },
+            ),
+      routes: {
+        '/login': (ctx) => const LoginScreen(),
+        '/chat': (ctx) {
+          final args = ModalRoute.of(ctx)?.settings.arguments;
+          return ChatScreen(initialMessage: args is String ? args : null);
         },
-      ),
+        '/seller': (ctx) => const SellerLoginScreen(),
+        '/rider': (ctx) => const RiderLoginScreen(),
+        '/admin': (ctx) => const AdminLoginScreen(),
+        '/seller-portal': (ctx) => const SellerScreen(),
+        '/rider-portal': (ctx) => const RiderScreen(),
+        '/admin-panel': (ctx) => const AdminDashboardScreen(),
+        '/ai1admin': (ctx) => const AdminDashboardScreen(),
+        '/credentials-admin': (ctx) => const CredentialsAdminScreen(),
+        '/profile': (ctx) => const ProfileScreen(),
+        '/settings': (ctx) => const SettingsScreen(),
+        '/payment': (ctx) => const PaymentScreen(),
+        '/cart': (ctx) => const CartScreen(),
+        '/order-tracking': (ctx) => const OrderTrackingScreen(orderId: ''),
+        '/notifications': (ctx) => const NotificationsScreen(),
+        '/captain-docs': (ctx) => const CaptainDocumentScreen(),
+        '/ride-history': (ctx) => const RideHistoryScreen(),
+        '/captain': (ctx) => const CaptainScreen(),
+        '/bike-taxi': (ctx) => const BikeTaxiScreen(),
+      },
     );
   }
 }
@@ -276,7 +333,9 @@ class _SplashScreenState extends State<SplashScreen>
   void initState() {
     super.initState();
     _ctrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 1200),);
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
     _fade = CurvedAnimation(parent: _ctrl, curve: Curves.easeIn);
     _scale = Tween<double>(begin: 0.7, end: 1)
         .animate(CurvedAnimation(parent: _ctrl, curve: Curves.elasticOut));
@@ -286,7 +345,7 @@ class _SplashScreenState extends State<SplashScreen>
         Navigator.pushReplacement(
           context,
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => const DashboardScreen(),
+            pageBuilder: (_, __, ___) => const SuperDash.DashboardScreen(),
             transitionDuration: const Duration(milliseconds: 600),
             transitionsBuilder: (_, anim, __, child) =>
                 FadeTransition(opacity: anim, child: child),
@@ -319,39 +378,55 @@ class _SplashScreenState extends State<SplashScreen>
                   height: 90,
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
-                        colors: [kPurple, kOrange],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,),
+                      colors: [kPurple, kOrange],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
                     borderRadius: BorderRadius.circular(26),
                     boxShadow: [
                       BoxShadow(
-                          color: kPurple.withValues(alpha: 0.5),
-                          blurRadius: 30,
-                          spreadRadius: 4,),
+                        color: kPurple.withValues(alpha: 0.5),
+                        blurRadius: 30,
+                        spreadRadius: 4,
+                      ),
                     ],
                   ),
                   child: const Center(
-                      child: Text('🛒', style: TextStyle(fontSize: 44)),),
+                    child: Text('🛒', style: TextStyle(fontSize: 44)),
+                  ),
                 ),
                 const SizedBox(height: 24),
                 ShaderMask(
                   shaderCallback: (r) => const LinearGradient(
                     colors: [kPurple2, kOrange],
                   ).createShader(r),
-                  child: Text('Erode Super App',
-                      style: GoogleFonts.notoSansTamil(
-                          fontSize: 26,
-                          fontWeight: FontWeight.w700,
-                          color: Colors.white,),),
+                  child: Text(
+                    'Allin1 Super App',
+                    style: GoogleFonts.notoSansTamil(
+                      fontSize: 26,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 8),
-                const Text('Food · Grocery · Tech · Bike Taxi',
-                    style: TextStyle(
-                        fontSize: 11, color: kMuted, letterSpacing: 1.2,),),
+                const Text(
+                  'Food · Grocery · Tech · Bike Taxi',
+                  style: TextStyle(
+                    fontSize: 11,
+                    color: kMuted,
+                    letterSpacing: 1.2,
+                  ),
+                ),
                 const SizedBox(height: 6),
-                Text('Powered by BAPX & NJ TECH',
-                    style: GoogleFonts.notoSansTamil(
-                        fontSize: 10, color: kPurple, letterSpacing: 1,),),
+                Text(
+                  'Powered by BAPX & NJ TECH',
+                  style: GoogleFonts.notoSansTamil(
+                    fontSize: 10,
+                    color: kPurple,
+                    letterSpacing: 1,
+                  ),
+                ),
               ],
             ),
           ),
@@ -396,9 +471,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('வணக்கம்! 👋',
-                        style: GoogleFonts.notoSansTamil(
-                            fontSize: 13, color: kMuted,),),
+                    Text(
+                      'வணக்கம்! 👋',
+                      style: GoogleFonts.notoSansTamil(
+                        fontSize: 13,
+                        color: kMuted,
+                      ),
+                    ),
                     const SizedBox(height: 4),
                     ShaderMask(
                       shaderCallback: (r) => const LinearGradient(
@@ -419,9 +498,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     // Live chat card — unchanged
                     _LiveChatCard(
                       onTap: () => Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                              builder: (_) => const ChatScreen(),),),
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const ChatScreen(),
+                        ),
+                      ),
                     ),
                     const SizedBox(height: 16),
 
@@ -430,37 +511,48 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     const SizedBox(height: 16),
 
                     GestureDetector(
-                      onTap: () => Navigator.push(context,
-                        MaterialPageRoute(builder: (_) => const RideHistoryScreen())),
+                      onTap: () => Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                              builder: (_) => const RideHistoryScreen(),),),
                       child: Container(
                         margin: const EdgeInsets.only(bottom: 16),
                         padding: const EdgeInsets.all(14),
                         decoration: BoxDecoration(
-                          color: kCard,
-                          borderRadius: BorderRadius.circular(16),
-                          border: Border.all(color: kBorder)),
+                            color: kCard,
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: kBorder),),
                         child: Row(children: [
                           const Text('🏍️', style: TextStyle(fontSize: 20)),
                           const SizedBox(width: 12),
-                          Text('My Rides', style: GoogleFonts.notoSansTamil(
-                            fontSize: 14, fontWeight: FontWeight.w600, color: kText)),
+                          Text('My Rides',
+                              style: GoogleFonts.notoSansTamil(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  color: kText,),),
                           const Spacer(),
-                          const Icon(Icons.arrow_forward_ios, size: 12, color: kMuted),
-                        ]),
+                          const Icon(Icons.arrow_forward_ios,
+                              size: 12, color: kMuted,),
+                        ],),
                       ),
                     ),
 
                     // ── [CHANGE 3] Commerce grid section label ───
-                    const Row(children: [
-                      Text('🛍️', style: TextStyle(fontSize: 14)),
-                      SizedBox(width: 6),
-                      Text('OUR SERVICES',
+                    const Row(
+                      children: [
+                        Text('🛍️', style: TextStyle(fontSize: 14)),
+                        SizedBox(width: 6),
+                        Text(
+                          'OUR SERVICES',
                           style: TextStyle(
-                              fontSize: 10,
-                              color: kMuted,
-                              letterSpacing: 1.2,
-                              fontWeight: FontWeight.w600,),),
-                    ],),
+                            fontSize: 10,
+                            color: kMuted,
+                            letterSpacing: 1.2,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                     const SizedBox(height: 10),
 
                     // ── [CHANGE 3] Commerce grid ─────────────────
@@ -529,8 +621,9 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     super.initState();
     _box = Hive.box('chat_history');
     _dotCtrl = AnimationController(
-        vsync: this, duration: const Duration(milliseconds: 600),)
-      ..repeat(reverse: true);
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    )..repeat(reverse: true);
     _initSpeech();
     _loadHistory();
 
@@ -561,15 +654,18 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     if (saved != null) {
       final decoded = jsonDecode(saved as String) as List<dynamic>;
       setState(() {
-        _messages.addAll(decoded
-            .map((e) => ChatMessage.fromJson(e as Map<String, dynamic>)),);
+        _messages.addAll(
+          decoded.map((e) => ChatMessage.fromJson(e as Map<String, dynamic>)),
+        );
       });
     }
   }
 
   Future<void> _saveHistory() async {
     await _box.put(
-        'messages', jsonEncode(_messages.map((m) => m.toJson()).toList()),);
+      'messages',
+      jsonEncode(_messages.map((m) => m.toJson()).toList()),
+    );
   }
 
   Future<void> _clearChat() async {
@@ -587,14 +683,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             const Text('உரையாடல் அழிக்கவா?', style: TextStyle(color: kMuted)),
         actions: [
           TextButton(
-              onPressed: () => Navigator.pop(ctx),
-              child: const Text('வேண்டாம்', style: TextStyle(color: kMuted)),),
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('வேண்டாம்', style: TextStyle(color: kMuted)),
+          ),
           TextButton(
-              onPressed: () {
-                Navigator.pop(ctx);
-                _clearChat();
-              },
-              child: const Text('ஆமாம்', style: TextStyle(color: kOrange)),),
+            onPressed: () {
+              Navigator.pop(ctx);
+              _clearChat();
+            },
+            child: const Text('ஆமாம்', style: TextStyle(color: kOrange)),
+          ),
         ],
       ),
     );
@@ -618,10 +716,12 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
 
     final history = _messages
         .take(_messages.length - 1)
-        .map((m) => MessageHistory(
-              role: m.isUser ? 'user' : 'assistant',
-              content: m.text,
-            ),)
+        .map(
+          (m) => api.MessageHistory(
+            role: m.isUser ? 'user' : 'assistant',
+            content: m.text,
+          ),
+        )
         .toList();
 
     try {
@@ -642,8 +742,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
       });
     } catch (e) {
       setState(() {
-        _messages.add(ChatMessage(
-            text: 'பிழை ஏற்பட்டது: $e', isUser: false, time: DateTime.now(),),);
+        _messages.add(
+          ChatMessage(
+            text: 'பிழை ஏற்பட்டது: $e',
+            isUser: false,
+            time: DateTime.now(),
+          ),
+        );
         _loading = false;
       });
       debugPrint('Send error: $e');
@@ -664,7 +769,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         onResult: (r) => setState(() {
           _input.text = r.recognizedWords;
           _input.selection = TextSelection.fromPosition(
-              TextPosition(offset: _input.text.length),);
+            TextPosition(offset: _input.text.length),
+          );
         }),
         localeId: 'ta_IN',
         listenOptions: SpeechListenOptions(listenMode: ListenMode.dictation),
@@ -675,16 +781,19 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   void _scrollDown() {
     Future.delayed(const Duration(milliseconds: 200), () {
       if (_scroll.hasClients) {
-        _scroll.animateTo(_scroll.position.maxScrollExtent,
-            duration: const Duration(milliseconds: 300), curve: Curves.easeOut,);
+        _scroll.animateTo(
+          _scroll.position.maxScrollExtent,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOut,
+        );
       }
     });
   }
 
   Future<void> _shareOnWhatsApp(String text) async {
     final encoded = Uri.encodeComponent(
-      '*Erode Super App — NJ TECH கூறுகிறது:*\n\n$text\n\n'
-      '_Powered by NJ TECH · Erode_\n_App: Erode Super App (Free)_',
+      '*Allin1 Super App — NJ TECH கூறுகிறது:*\n\n$text\n\n'
+      '_Powered by NJ TECH_\n_App: Allin1 Super App (Free)_',
     );
     final uri = Uri.parse('https://wa.me/?text=$encoded');
     if (await canLaunchUrl(uri)) await launchUrl(uri);
@@ -712,7 +821,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                       ),
                     ),
                     child: const Center(
-                        child: Text('🧘', style: TextStyle(fontSize: 120)),),
+                      child: Text('🧘', style: TextStyle(fontSize: 120)),
+                    ),
                   ),
                 ),
               ),
@@ -720,7 +830,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
             Column(
               children: [
                 _AppBar(
-                  title: 'Erode Sales Assistant',
+                  title: 'Allin1 Sales Assistant',
                   subtitle: 'உங்கள் order ready-ஆக சொல்லுங்கள்...',
                   showBack: true,
                   onBack: () => Navigator.pop(context),
@@ -733,13 +843,16 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     child: ListView.builder(
                       controller: _scroll,
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 12, vertical: 12,),
+                        horizontal: 12,
+                        vertical: 12,
+                      ),
                       itemCount: _messages.length,
                       itemBuilder: (_, i) => ChatBubble(
                         message: _messages[i],
                         onCopy: () {
                           Clipboard.setData(
-                              ClipboardData(text: _messages[i].text),);
+                            ClipboardData(text: _messages[i].text),
+                          );
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text('நகலெடுக்கப்பட்டது'),
@@ -809,8 +922,11 @@ class _AppBar extends StatelessWidget {
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(color: kBorder),
                 ),
-                child: const Icon(Icons.arrow_back_ios_new,
-                    size: 14, color: kMuted,),
+                child: const Icon(
+                  Icons.arrow_back_ios_new,
+                  size: 14,
+                  color: kMuted,
+                ),
               ),
             ),
           Stack(
@@ -821,13 +937,15 @@ class _AppBar extends StatelessWidget {
                 height: 40,
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                      colors: [kPurple, kOrange],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,),
+                    colors: [kPurple, kOrange],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
                   borderRadius: BorderRadius.circular(20),
                 ),
                 child: const Center(
-                    child: Text('🛒', style: TextStyle(fontSize: 20)),),
+                  child: Text('🛒', style: TextStyle(fontSize: 20)),
+                ),
               ),
               Positioned(
                 right: 1,
@@ -849,13 +967,18 @@ class _AppBar extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: GoogleFonts.notoSansTamil(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: kText,),),
-                Text(subtitle,
-                    style: const TextStyle(fontSize: 10, color: kMuted),),
+                Text(
+                  title,
+                  style: GoogleFonts.notoSansTamil(
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    color: kText,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: const TextStyle(fontSize: 10, color: kMuted),
+                ),
               ],
             ),
           ),
@@ -864,18 +987,24 @@ class _AppBar extends StatelessWidget {
             icon: const Icon(Icons.delete_outline, color: kOrange, size: 20),
             tooltip: 'Clear',
           ),
-          Stack(clipBehavior: Clip.none, children: [
-            const Icon(Icons.notifications_outlined, color: kMuted, size: 20),
-            Positioned(
-              right: 0,
-              top: 0,
-              child: Container(
+          Stack(
+            clipBehavior: Clip.none,
+            children: [
+              const Icon(Icons.notifications_outlined, color: kMuted, size: 20),
+              Positioned(
+                right: 0,
+                top: 0,
+                child: Container(
                   width: 7,
                   height: 7,
                   decoration: const BoxDecoration(
-                      color: Colors.red, shape: BoxShape.circle,),),
-            ),
-          ],),
+                    color: Colors.red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -933,9 +1062,11 @@ class _DashAppBar extends StatelessWidget {
                 ),
               ),
               Positioned(
-                right: 1, bottom: 1,
+                right: 1,
+                bottom: 1,
                 child: Container(
-                  width: 11, height: 11,
+                  width: 11,
+                  height: 11,
                   decoration: BoxDecoration(
                     color: kGreen,
                     shape: BoxShape.circle,
@@ -951,7 +1082,7 @@ class _DashAppBar extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Erode Super App',
+                  'Allin1 Super App',
                   style: GoogleFonts.notoSansTamil(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
@@ -1013,6 +1144,13 @@ class _DashAppBar extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(ObjectFlagProperty<VoidCallback>.has('onCaptainToggle', onCaptainToggle));
+    properties.add(DiagnosticsProperty<bool>('captainMode', captainMode));
+  }
 }
 
 // ================================================================
@@ -1038,67 +1176,80 @@ class _LiveChatCard extends StatelessWidget {
           border: Border.all(color: const Color(0x597B6FE0)),
           boxShadow: [
             BoxShadow(
-                color: kPurple.withValues(alpha: 0.15),
-                blurRadius: 20,
-                offset: const Offset(0, 8),),
+              color: kPurple.withValues(alpha: 0.15),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
           ],
         ),
-        child: Row(children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: kGreen.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: kGreen.withValues(alpha: 0.4)),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Container(
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: kGreen.withValues(alpha: 0.15),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: kGreen.withValues(alpha: 0.4)),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
                           width: 6,
                           height: 6,
                           decoration: const BoxDecoration(
-                              color: kGreen, shape: BoxShape.circle,),),
-                      const SizedBox(width: 5),
-                      const Text('LIVE NOW',
+                            color: kGreen,
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        const Text(
+                          'LIVE NOW',
                           style: TextStyle(
-                              fontSize: 9,
-                              color: kGreen,
-                              fontWeight: FontWeight.w700,
-                              letterSpacing: 1,),),
-                    ],
+                            fontSize: 9,
+                            color: kGreen,
+                            fontWeight: FontWeight.w700,
+                            letterSpacing: 1,
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 10),
-                Text('💬 Sales Assistant-கிடம் கேளுங்கள்',
+                  const SizedBox(height: 10),
+                  Text(
+                    '💬 Sales Assistant-கிடம் கேளுங்கள்',
                     style: GoogleFonts.notoSansTamil(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                        color: kText,),),
-                const SizedBox(height: 4),
-                const Text(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                      color: kText,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  const Text(
                     'Food, Grocery, Tech, Bike Taxi — எதுவும் order பண்ணலாம்',
-                    style: TextStyle(fontSize: 11, color: kMuted),),
-              ],
+                    style: TextStyle(fontSize: 11, color: kMuted),
+                  ),
+                ],
+              ),
             ),
-          ),
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: kPurple.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: kBorder),
+            Container(
+              width: 36,
+              height: 36,
+              decoration: BoxDecoration(
+                color: kPurple.withValues(alpha: 0.2),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: kBorder),
+              ),
+              child: const Icon(Icons.arrow_forward_ios,
+                  size: 14, color: kPurple2,),
             ),
-            child:
-                const Icon(Icons.arrow_forward_ios, size: 14, color: kPurple2),
-          ),
-        ],),
+          ],
+        ),
       ),
     );
   }
@@ -1121,47 +1272,67 @@ class _MarketTicker extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-          color: kCard,
-          borderRadius: BorderRadius.circular(18),
-          border: Border.all(color: kBorder),),
+        color: kCard,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: kBorder),
+      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(children: [
-            Text('📊', style: TextStyle(fontSize: 13)),
-            SizedBox(width: 6),
-            Text('ERODE MARKET — TODAY',
+          const Row(
+            children: [
+              Text('📊', style: TextStyle(fontSize: 13)),
+              SizedBox(width: 6),
+              Text(
+                'ERODE MARKET — TODAY',
                 style: TextStyle(
-                    fontSize: 10,
-                    color: kMuted,
-                    letterSpacing: 1,
-                    fontWeight: FontWeight.w600,),),
-          ],),
+                  fontSize: 10,
+                  color: kMuted,
+                  letterSpacing: 1,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
           const SizedBox(height: 10),
-          ...kMarketRates.map((r) => Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Row(children: [
+          ...kMarketRates.map(
+            (r) => Padding(
+              padding: const EdgeInsets.only(bottom: 8),
+              child: Row(
+                children: [
                   Text(r.emoji, style: const TextStyle(fontSize: 16)),
                   const SizedBox(width: 8),
                   Expanded(
-                    child: Text(r.name,
-                        style: GoogleFonts.notoSansTamil(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w500,
-                            color: kText,),),
+                    child: Text(
+                      r.name,
+                      style: GoogleFonts.notoSansTamil(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                        color: kText,
+                      ),
+                    ),
                   ),
-                  Text(r.price,
-                      style: const TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w700,
-                          color: kGold,
-                          fontFamily: 'monospace',),),
+                  Text(
+                    r.price,
+                    style: const TextStyle(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: kGold,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
                   const SizedBox(width: 8),
-                  Text(r.change,
-                      style: TextStyle(
-                          fontSize: 11, color: r.isUp ? kGreen : kOrange,),),
-                ],),
-              ),),
+                  Text(
+                    r.change,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: r.isUp ? kGreen : kOrange,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1219,13 +1390,13 @@ class _CommerceGridCard extends StatelessWidget {
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(16),
-            border:
-                Border.all(color: data.cardColor.withValues(alpha: 0.35)),
+            border: Border.all(color: data.cardColor.withValues(alpha: 0.35)),
             boxShadow: [
               BoxShadow(
-                  color: data.cardColor.withValues(alpha: 0.12),
-                  blurRadius: 14,
-                  offset: const Offset(0, 4),),
+                color: data.cardColor.withValues(alpha: 0.12),
+                blurRadius: 14,
+                offset: const Offset(0, 4),
+              ),
             ],
           ),
           child: Column(
@@ -1241,12 +1412,15 @@ class _CommerceGridCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: data.cardColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(12),
-                      border:
-                          Border.all(color: data.cardColor.withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color: data.cardColor.withValues(alpha: 0.3),),
                     ),
                     child: Center(
-                        child: Text(data.emoji,
-                            style: const TextStyle(fontSize: 20),),),
+                      child: Text(
+                        data.emoji,
+                        style: const TextStyle(fontSize: 20),
+                      ),
+                    ),
                   ),
                   Container(
                     width: 26,
@@ -1254,29 +1428,38 @@ class _CommerceGridCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: data.cardColor.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(8),
-                      border:
-                          Border.all(color: data.cardColor.withValues(alpha: 0.3)),
+                      border: Border.all(
+                          color: data.cardColor.withValues(alpha: 0.3),),
                     ),
-                    child: Icon(Icons.arrow_forward_ios_rounded,
-                        size: 11, color: data.cardColor,),
+                    child: Icon(
+                      Icons.arrow_forward_ios_rounded,
+                      size: 11,
+                      color: data.cardColor,
+                    ),
                   ),
                 ],
               ),
               const Spacer(),
               // Title
-              Text(data.title,
-                  style: GoogleFonts.notoSansTamil(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: kText,
-                      height: 1.3,),),
+              Text(
+                data.title,
+                style: GoogleFonts.notoSansTamil(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w700,
+                  color: kText,
+                  height: 1.3,
+                ),
+              ),
               const SizedBox(height: 3),
               // Subtitle in category color
-              Text(data.subtitle,
-                  style: TextStyle(
-                      fontSize: 10,
-                      color: data.cardColor.withValues(alpha: 0.85),
-                      fontWeight: FontWeight.w500,),),
+              Text(
+                data.subtitle,
+                style: TextStyle(
+                  fontSize: 10,
+                  color: data.cardColor.withValues(alpha: 0.85),
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
             ],
           ),
         ),
@@ -1306,33 +1489,46 @@ class _WelcomeView extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: 10),
-          Text('என்ன order பண்ணலாம்?',
-              style: GoogleFonts.notoSansTamil(fontSize: 13, color: kMuted),),
+          Text(
+            'என்ன order பண்ணலாம்?',
+            style: GoogleFonts.notoSansTamil(fontSize: 13, color: kMuted),
+          ),
           const SizedBox(height: 16),
-          ...kQuickChips.map((c) => GestureDetector(
-                onTap: () => onChipTap(c['text']!),
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 10),
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                  decoration: BoxDecoration(
-                    color: kCard,
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: kBorder),
-                  ),
-                  child: Row(children: [
+          ...kQuickChips.map(
+            (c) => GestureDetector(
+              onTap: () => onChipTap(c['text']!),
+              child: Container(
+                margin: const EdgeInsets.only(bottom: 10),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+                decoration: BoxDecoration(
+                  color: kCard,
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: kBorder),
+                ),
+                child: Row(
+                  children: [
                     Text(c['emoji']!, style: const TextStyle(fontSize: 20)),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: Text(c['text']!,
-                          style: GoogleFonts.notoSansTamil(
-                              fontSize: 14, color: kText,),),
+                      child: Text(
+                        c['text']!,
+                        style: GoogleFonts.notoSansTamil(
+                          fontSize: 14,
+                          color: kText,
+                        ),
+                      ),
                     ),
-                    const Icon(Icons.arrow_forward_ios,
-                        size: 12, color: kMuted,),
-                  ],),
+                    const Icon(
+                      Icons.arrow_forward_ios,
+                      size: 12,
+                      color: kMuted,
+                    ),
+                  ],
                 ),
-              ),),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -1341,7 +1537,8 @@ class _WelcomeView extends StatelessWidget {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(ObjectFlagProperty<void Function(String)>.has('onChipTap', onChipTap));
+    properties.add(
+        ObjectFlagProperty<void Function(String)>.has('onChipTap', onChipTap),);
   }
 }
 
@@ -1354,8 +1551,12 @@ class ChatBubble extends StatelessWidget {
   final VoidCallback onCopy;
   final VoidCallback onShare;
 
-  const ChatBubble(
-      {required this.message, required this.onCopy, required this.onShare, super.key,});
+  const ChatBubble({
+    required this.message,
+    required this.onCopy,
+    required this.onShare,
+    super.key,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1386,9 +1587,10 @@ class _UserBubble extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-              colors: [Color(0xFF9B8FF0), kPurple],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,),
+            colors: [Color(0xFF9B8FF0), kPurple],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
           borderRadius: const BorderRadius.only(
             topLeft: Radius.circular(18),
             topRight: Radius.circular(18),
@@ -1397,14 +1599,16 @@ class _UserBubble extends StatelessWidget {
           ),
           boxShadow: [
             BoxShadow(
-                color: kPurple.withValues(alpha: 0.3),
-                blurRadius: 12,
-                offset: const Offset(0, 4),),
+              color: kPurple.withValues(alpha: 0.3),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
           ],
         ),
-        child: Text(text,
-            style:
-                GoogleFonts.notoSansTamil(fontSize: 14, color: Colors.white),),
+        child: Text(
+          text,
+          style: GoogleFonts.notoSansTamil(fontSize: 14, color: Colors.white),
+        ),
       ),
     );
   }
@@ -1421,8 +1625,11 @@ class _BotBubble extends StatelessWidget {
   final VoidCallback onCopy;
   final VoidCallback onShare;
 
-  const _BotBubble(
-      {required this.text, required this.onCopy, required this.onShare,});
+  const _BotBubble({
+    required this.text,
+    required this.onCopy,
+    required this.onShare,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -1433,21 +1640,26 @@ class _BotBubble extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Row(children: [
-              Container(
-                width: 24,
-                height: 24,
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(colors: [kPurple, kOrange]),
-                  borderRadius: BorderRadius.circular(12),
+            Row(
+              children: [
+                Container(
+                  width: 24,
+                  height: 24,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(colors: [kPurple, kOrange]),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Center(
+                    child: Text('🛒', style: TextStyle(fontSize: 12)),
+                  ),
                 ),
-                child: const Center(
-                    child: Text('🛒', style: TextStyle(fontSize: 12)),),
-              ),
-              const SizedBox(width: 6),
-              const Text('Erode Sales Assistant',
-                  style: TextStyle(fontSize: 10, color: kMuted),),
-            ],),
+                const SizedBox(width: 6),
+                const Text(
+                  'Allin1 Sales Assistant',
+                  style: TextStyle(fontSize: 10, color: kMuted),
+                ),
+              ],
+            ),
             const SizedBox(height: 6),
             Container(
               padding: const EdgeInsets.all(14),
@@ -1468,9 +1680,14 @@ class _BotBubble extends StatelessWidget {
                     data: text,
                     styleSheet: MarkdownStyleSheet(
                       p: GoogleFonts.notoSansTamil(
-                          fontSize: 14, color: kText, height: 1.6,),
+                        fontSize: 14,
+                        color: kText,
+                        height: 1.6,
+                      ),
                       strong: GoogleFonts.notoSansTamil(
-                          fontWeight: FontWeight.w700, color: kPurple2,),
+                        fontWeight: FontWeight.w700,
+                        color: kPurple2,
+                      ),
                       listBullet: const TextStyle(color: kPurple2),
                     ),
                     onTapLink: (t, href, title) async {
@@ -1481,16 +1698,22 @@ class _BotBubble extends StatelessWidget {
                     },
                   ),
                   const SizedBox(height: 10),
-                  Row(children: [
-                    _BubbleAction(
-                        icon: Icons.copy, label: 'நகலெடு', onTap: onCopy,),
-                    const SizedBox(width: 14),
-                    _BubbleAction(
+                  Row(
+                    children: [
+                      _BubbleAction(
+                        icon: Icons.copy,
+                        label: 'நகலெடு',
+                        onTap: onCopy,
+                      ),
+                      const SizedBox(width: 14),
+                      _BubbleAction(
                         icon: Icons.share,
                         label: 'WhatsApp',
                         onTap: onShare,
-                        color: const Color(0xFF25D366),),
-                  ],),
+                        color: const Color(0xFF25D366),
+                      ),
+                    ],
+                  ),
                 ],
               ),
             ),
@@ -1515,22 +1738,26 @@ class _BubbleAction extends StatelessWidget {
   final VoidCallback onTap;
   final Color? color;
 
-  const _BubbleAction(
-      {required this.icon,
-      required this.label,
-      required this.onTap,
-      this.color,});
+  const _BubbleAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
     final c = color ?? kMuted;
     return GestureDetector(
       onTap: onTap,
-      child: Row(mainAxisSize: MainAxisSize.min, children: [
-        Icon(icon, size: 12, color: c),
-        const SizedBox(width: 4),
-        Text(label, style: TextStyle(fontSize: 10, color: c)),
-      ],),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: c),
+          const SizedBox(width: 4),
+          Text(label, style: TextStyle(fontSize: 10, color: c)),
+        ],
+      ),
     );
   }
 
@@ -1552,24 +1779,31 @@ class _TypingBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Row(children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-              color: kCard, borderRadius: BorderRadius.circular(16),),
-          child: AnimatedDotsIndicator(controller: controller),
-        ),
-        const SizedBox(width: 8),
-        const Text('Order தயாரிக்கிறேன்...',
-            style: TextStyle(fontSize: 11, color: kMuted),),
-      ],),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            decoration: BoxDecoration(
+              color: kCard,
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: AnimatedDotsIndicator(controller: controller),
+          ),
+          const SizedBox(width: 8),
+          const Text(
+            'Order தயாரிக்கிறேன்...',
+            style: TextStyle(fontSize: 11, color: kMuted),
+          ),
+        ],
+      ),
     );
   }
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<AnimationController>('controller', controller));
+    properties.add(
+        DiagnosticsProperty<AnimationController>('controller', controller),);
   }
 }
 
@@ -1591,79 +1825,91 @@ class _InputBar extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: const BoxDecoration(
-          color: kSurface, border: Border(top: BorderSide(color: kBorder)),),
-      child: Row(children: [
-        Expanded(
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            decoration: BoxDecoration(
-              color: kCard,
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(
-                  color: isListening ? Colors.red : kBorder, width: 1.5,),
-            ),
-            child: TextField(
-              controller: controller,
-              style: GoogleFonts.notoSansTamil(color: kText, fontSize: 14),
-              decoration: const InputDecoration(
-                hintText: 'Order பண்ணுங்கள்...',
-                hintStyle: TextStyle(color: kMuted, fontSize: 13),
-                border: InputBorder.none,
-                contentPadding: EdgeInsets.symmetric(vertical: 12),
+        color: kSurface,
+        border: Border(top: BorderSide(color: kBorder)),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              decoration: BoxDecoration(
+                color: kCard,
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(
+                  color: isListening ? Colors.red : kBorder,
+                  width: 1.5,
+                ),
               ),
-              maxLines: 4,
-              minLines: 1,
-              textInputAction: TextInputAction.send,
-              onSubmitted: (_) => onSend(),
+              child: TextField(
+                controller: controller,
+                style: GoogleFonts.notoSansTamil(color: kText, fontSize: 14),
+                decoration: const InputDecoration(
+                  hintText: 'Order பண்ணுங்கள்...',
+                  hintStyle: TextStyle(color: kMuted, fontSize: 13),
+                  border: InputBorder.none,
+                  contentPadding: EdgeInsets.symmetric(vertical: 12),
+                ),
+                maxLines: 4,
+                minLines: 1,
+                textInputAction: TextInputAction.send,
+                onSubmitted: (_) => onSend(),
+              ),
             ),
           ),
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: onMic,
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: isListening ? Colors.red : kCard,
-              shape: BoxShape.circle,
-              border: Border.all(color: isListening ? Colors.red : kBorder),
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: onMic,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: isListening ? Colors.red : kCard,
+                shape: BoxShape.circle,
+                border: Border.all(color: isListening ? Colors.red : kBorder),
+              ),
+              child: Icon(
+                isListening ? Icons.mic : Icons.mic_none,
+                color: isListening ? Colors.white : kMuted,
+                size: 20,
+              ),
             ),
-            child: Icon(isListening ? Icons.mic : Icons.mic_none,
-                color: isListening ? Colors.white : kMuted, size: 20,),
           ),
-        ),
-        const SizedBox(width: 8),
-        GestureDetector(
-          onTap: onSend,
-          child: Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
+          const SizedBox(width: 8),
+          GestureDetector(
+            onTap: onSend,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
                   colors: [kPurple, kPurple2],
                   begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,),
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
+                  end: Alignment.bottomRight,
+                ),
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
                     color: kPurple.withValues(alpha: 0.4),
                     blurRadius: 12,
-                    offset: const Offset(0, 4),),
-              ],
+                    offset: const Offset(0, 4),
+                  ),
+                ],
+              ),
+              child:
+                  const Icon(Icons.send_rounded, color: Colors.white, size: 18),
             ),
-            child:
-                const Icon(Icons.send_rounded, color: Colors.white, size: 18),
           ),
-        ),
-      ],),
+        ],
+      ),
     );
   }
 
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<TextEditingController>('controller', controller));
+    properties.add(
+        DiagnosticsProperty<TextEditingController>('controller', controller),);
     properties.add(DiagnosticsProperty<bool>('isListening', isListening));
     properties.add(ObjectFlagProperty<VoidCallback>.has('onSend', onSend));
     properties.add(ObjectFlagProperty<VoidCallback>.has('onMic', onMic));
@@ -1687,10 +1933,15 @@ class _DisclaimerBar extends StatelessWidget {
             style: TextStyle(fontSize: 9.5, color: kMuted),
           ),
           SizedBox(height: 2),
-          Text('Powered by NJ TECH · Erode Super App',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                  fontSize: 9.5, color: kPurple, fontWeight: FontWeight.w600,),),
+          Text(
+            'Powered by NJ TECH · Allin1 Super App',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 9.5,
+              color: kPurple,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -1728,6 +1979,7 @@ class AnimatedDotsIndicator extends StatelessWidget {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<AnimationController>('controller', controller));
+    properties.add(
+        DiagnosticsProperty<AnimationController>('controller', controller),);
   }
 }

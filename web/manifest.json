@@ -1,7 +1,7 @@
 {
-    "name": "Erode Super App - நம்ம ஊரு ஆப்",
-    "short_name": "NammaGuru",
-    "description": "Erode's all-in-one commerce app for Food, Grocery, Tech accessories, and Bike Taxi. Order in Tamil or English.",
+    "name": "Allin1 Super App - நம்ம ஊரு ஆப்",
+    "short_name": "Allin1",
+    "description": "Allin1 Super App for Food, Grocery, Tech accessories, and Bike Taxi. Order in Tamil or English.",
     "start_url": "/",
     "display": "standalone",
     "background_color": "#08080F",
@@ -43,7 +43,7 @@
             "sizes": "1080x1920",
             "type": "image/png",
             "form_factor": "narrow",
-            "label": "Erode Super App Dashboard - Order Food, Grocery, Tech & Bike Taxi"
+            "label": "Allin1 Super App Dashboard - Order Food, Grocery, Tech & Bike Taxi"
         },
         {
             "src": "screenshots/chat.png",
@@ -77,7 +77,7 @@
         {
             "name": "Order Grocery",
             "short_name": "Grocery",
-            "description": "Order fresh groceries from Erode Fresh",
+            "description": "Order fresh groceries from Allin1 Fresh",
             "url": "/?action=grocery",
             "icons": [
                 {
@@ -103,7 +103,7 @@
         {
             "name": "Book Bike Taxi",
             "short_name": "Bike",
-            "description": "Book a quick bike ride in Erode",
+            "description": "Book a quick bike ride",
             "url": "/?action=bike",
             "icons": [
                 {
