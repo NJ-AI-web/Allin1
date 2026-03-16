@@ -70,14 +70,14 @@ Internal use for NJ-AI-web. For open-source distribution, see [LICENSE](LICENSE)
 
 Web entry points by role:
 
-1. `/#/` ? Landing page
-2. `/#/login` ? Customer login
-3. `/#/seller` ? Seller login
-4. `/#/rider` ? Rider login
-5. `/#/admin` ? Admin login
+1. `/` ? Landing page
+2. `/login` ? Customer login
+3. `/seller` ? Seller login
+4. `/rider` ? Rider login
+5. `/admin` ? Admin login
 
 Post-login panels:
 
-1. `/#/seller-portal` ? Seller dashboard
-2. `/#/rider-portal` ? Rider dashboard
-3. `/#/admin-panel` ? Admin dashboard
+1. `/seller-portal` ? Seller dashboard
+2. `/rider-portal` ? Rider dashboard
+3. `/admin-panel` ? Admin dashboard
