@@ -160,11 +160,11 @@ class CredentialCacheService {
   // ================================================================
   // Hive Boxes
   // ================================================================
-  Box? _credentialsCacheBoxInstance;
-  Box? _categoriesCacheBoxInstance;
-  Box? _offlineQueueBoxInstance;
-  Box? _cacheMetadataBoxInstance;
-  Box? _syncStatusBoxInstance;
+  late Box<dynamic> _credentialsCacheBoxInstance;
+  late Box<dynamic> _categoriesCacheBoxInstance;
+  late Box<dynamic> _offlineQueueBoxInstance;
+  late Box<dynamic> _cacheMetadataBoxInstance;
+  late Box<dynamic> _syncStatusBoxInstance;
 
   // ================================================================
   // State
@@ -279,7 +279,7 @@ class CredentialCacheService {
     final key = 'user_$userId';
     final jsonList = credentials.map((c) => c.toJson()).toList();
 
-    await _credentialsCacheBoxInstance!.put(key, jsonEncode(jsonList));
+    await _credentialsCacheBoxInstance.put(key, jsonEncode(jsonList));
     await _updateCacheMetadata(key, _defaultTtl);
   }
 
@@ -298,7 +298,7 @@ class CredentialCacheService {
       return CacheResult.failure('Cache expired');
     }
 
-    final cachedData = _credentialsCacheBoxInstance!.get(key);
+    final cachedData = _credentialsCacheBoxInstance.get(key);
     if (cachedData == null) {
       return CacheResult.failure('No cached data');
     }
@@ -319,7 +319,7 @@ class CredentialCacheService {
     _ensureInitialized();
     final key = credential.id;
 
-    await _credentialsCacheBoxInstance!.put(key, credential.toJsonString());
+    await _credentialsCacheBoxInstance.put(key, credential.toJsonString());
     await _updateCacheMetadata(key, _defaultTtl);
   }
 
@@ -329,7 +329,7 @@ class CredentialCacheService {
   ) async {
     _ensureInitialized();
 
-    final cachedData = _credentialsCacheBoxInstance!.get(credentialId);
+    final cachedData = _credentialsCacheBoxInstance.get(credentialId);
     if (cachedData == null) {
       return CacheResult.failure('Credential not in cache');
     }
@@ -353,7 +353,7 @@ class CredentialCacheService {
   /// Remove credential from cache
   Future<void> removeCachedCredential(String credentialId) async {
     _ensureInitialized();
-    await _credentialsCacheBoxInstance!.delete(credentialId);
+    await _credentialsCacheBoxInstance.delete(credentialId);
     await _removeCacheMetadata(credentialId);
   }
 
@@ -372,7 +372,7 @@ class CredentialCacheService {
     final key = 'categories_$userId';
     final jsonList = categories.map((c) => c.toJson()).toList();
 
-    await _categoriesCacheBoxInstance!.put(key, jsonEncode(jsonList));
+    await _categoriesCacheBoxInstance.put(key, jsonEncode(jsonList));
     await _updateCacheMetadata(key, _defaultTtl);
   }
 
@@ -391,7 +391,7 @@ class CredentialCacheService {
       return CacheResult.failure('Cache expired');
     }
 
-    final cachedData = _categoriesCacheBoxInstance!.get(key);
+    final cachedData = _categoriesCacheBoxInstance.get(key);
     if (cachedData == null) {
       return CacheResult.failure('No cached data');
     }
@@ -428,7 +428,7 @@ class CredentialCacheService {
       data: data,
     );
 
-    await _offlineQueueBoxInstance!.put(
+    await _offlineQueueBoxInstance.put(
       operation.id,
       jsonEncode(operation.toJson()),
     );
@@ -439,9 +439,9 @@ class CredentialCacheService {
     _ensureInitialized();
 
     final operations = <OfflineOperation>[];
-    for (final key in _offlineQueueBoxInstance!.keys) {
+    for (final key in _offlineQueueBoxInstance.keys) {
       try {
-        final data = _offlineQueueBoxInstance!.get(key);
+        final data = _offlineQueueBoxInstance.get(key);
         if (data != null) {
           operations.add(
             OfflineOperation.fromJson(
@@ -462,7 +462,7 @@ class CredentialCacheService {
   /// Remove operation from queue after successful sync
   Future<void> removeFromOfflineQueue(String operationId) async {
     _ensureInitialized();
-    await _offlineQueueBoxInstance!.delete(operationId);
+    await _offlineQueueBoxInstance.delete(operationId);
   }
 
   /// Update operation retry count
@@ -473,7 +473,7 @@ class CredentialCacheService {
   ) async {
     _ensureInitialized();
 
-    final data = _offlineQueueBoxInstance!.get(operationId);
+    final data = _offlineQueueBoxInstance.get(operationId);
     if (data != null) {
       final operation = OfflineOperation.fromJson(
         jsonDecode(data as String) as Map<String, dynamic>,
@@ -481,7 +481,7 @@ class CredentialCacheService {
       operation.retryCount = retryCount;
       operation.lastError = error;
 
-      await _offlineQueueBoxInstance!.put(
+      await _offlineQueueBoxInstance.put(
         operationId,
         jsonEncode(operation.toJson()),
       );
@@ -493,7 +493,7 @@ class CredentialCacheService {
     if (!_isInitialized) {
       return 0;
     }
-    return _offlineQueueBoxInstance?.length ?? 0;
+    return _offlineQueueBoxInstance.length;
   }
 
   // ================================================================
@@ -573,7 +573,7 @@ class CredentialCacheService {
       cachedAt: DateTime.now(),
       ttl: ttl,
     );
-    await _cacheMetadataBoxInstance!.put(
+    await _cacheMetadataBoxInstance.put(
       key,
       jsonEncode(metadata.toJson()),
     );
@@ -581,12 +581,12 @@ class CredentialCacheService {
 
   /// Remove cache metadata
   Future<void> _removeCacheMetadata(String key) async {
-    await _cacheMetadataBoxInstance!.delete(key);
+    await _cacheMetadataBoxInstance.delete(key);
   }
 
   /// Check if cache is expired for a key
   Future<bool> _isCacheExpired(String key) async {
-    final data = _cacheMetadataBoxInstance!.get(key);
+    final data = _cacheMetadataBoxInstance.get(key);
     if (data == null) {
       return true;
     }
@@ -609,17 +609,17 @@ class CredentialCacheService {
 
     try {
       // Clean up credentials cache
-      for (final key in _credentialsCacheBoxInstance!.keys) {
+      for (final key in _credentialsCacheBoxInstance.keys) {
         if (await _isCacheExpired(key as String)) {
-          await _credentialsCacheBoxInstance!.delete(key);
+          await _credentialsCacheBoxInstance.delete(key);
           await _removeCacheMetadata(key);
         }
       }
 
       // Clean up categories cache
-      for (final key in _categoriesCacheBoxInstance!.keys) {
+      for (final key in _categoriesCacheBoxInstance.keys) {
         if (await _isCacheExpired(key as String)) {
-          await _categoriesCacheBoxInstance!.delete(key);
+          await _categoriesCacheBoxInstance.delete(key);
           await _removeCacheMetadata(key);
         }
       }
@@ -636,11 +636,11 @@ class CredentialCacheService {
   Future<void> clearAllCache() async {
     _ensureInitialized();
 
-    await _credentialsCacheBoxInstance!.clear();
-    await _categoriesCacheBoxInstance!.clear();
-    await _offlineQueueBoxInstance!.clear();
-    await _cacheMetadataBoxInstance!.clear();
-    await _syncStatusBoxInstance!.clear();
+    await _credentialsCacheBoxInstance.clear();
+    await _categoriesCacheBoxInstance.clear();
+    await _offlineQueueBoxInstance.clear();
+    await _cacheMetadataBoxInstance.clear();
+    await _syncStatusBoxInstance.clear();
 
     _updateSyncStatus(SyncStatus.idle);
   }
@@ -648,13 +648,13 @@ class CredentialCacheService {
   /// Clear only credentials cache
   Future<void> clearCredentialsCache() async {
     _ensureInitialized();
-    await _credentialsCacheBoxInstance!.clear();
+    await _credentialsCacheBoxInstance.clear();
   }
 
   /// Clear only categories cache
   Future<void> clearCategoriesCache() async {
     _ensureInitialized();
-    await _categoriesCacheBoxInstance!.clear();
+    await _categoriesCacheBoxInstance.clear();
   }
 
   // ================================================================

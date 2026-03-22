@@ -3,18 +3,20 @@
   "targets": {
     "erode-super-app": {
       "hosting": {
-        "customer": [
+        "admin": [
+          "adminhq-allin1"
+        ],
+        "my-allin1": [
           "my-allin1"
         ],
-        "seller": [
-          "grow-allin1"
+        "hero-allin1": [
+          "hero-allin1"
         ],
-        "admin": [
-          "adminhq-allin1",
+        "hq-allin1": [
           "hq-allin1"
         ],
-        "hero": [
-          "hero-allin1"
+        "grow-allin1": [
+          "grow-allin1"
         ]
       }
     }

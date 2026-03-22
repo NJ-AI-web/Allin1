@@ -39,7 +39,6 @@ class _CaptainHomeScreenState extends State<CaptainHomeScreen>
   bool _isOnline = false;
   bool _accepting = false;
   String _activeRideId = '';
-  Map<String, dynamic>? _activeRideData;
 
   // Commission + Hero Coins state
   double _commissionRate = 0.10;
@@ -119,16 +118,6 @@ class _CaptainHomeScreenState extends State<CaptainHomeScreen>
   }
 
 // ── Commission Waiver Banner + Hero Coins snippets ──
-// Insert into captain_home_screen.dart
-
-// NEW STATE VARS (add after _activeRideData):
-//   double _commissionRate  = 0.10; // Default 10%
-//   bool   _waiverShown     = false;
-//   bool   _waiverCompleted = false;
-//   int    _heroCoins       = 0;
-//   bool   _firstLoginToday = false;
-
-// NEW METHODS — add after _syncOnlineStatus:
 
   Future<void> _loadHeroData() async {
     if (_user == null) {
@@ -269,7 +258,6 @@ class _CaptainHomeScreenState extends State<CaptainHomeScreen>
         final doc = snap.docs.first;
         setState(() {
           _activeRideId = doc.id;
-          _activeRideData = doc.data();
           _isOnline = true;
         });
         _startLocationUpdates(doc.id);
@@ -311,7 +299,6 @@ class _CaptainHomeScreenState extends State<CaptainHomeScreen>
 
       setState(() {
         _activeRideId = rideId;
-        _activeRideData = rideData;
         _accepting = false;
       });
       _startLocationUpdates(rideId);
@@ -359,7 +346,6 @@ class _CaptainHomeScreenState extends State<CaptainHomeScreen>
 
     setState(() {
       _activeRideId = '';
-      _activeRideData = null;
     });
     _stopLocationUpdates();
     if (mounted) {
