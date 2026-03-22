@@ -436,9 +436,6 @@ linter:
     # Use prefer double quotes
     prefer_double_quotes: false  # Disabled - single quotes fine
     
-    # Use prefer equal operators
-    prefer_equal_for_default_values: true
-    
     # Use prefer expression function body
     prefer_expression_function_bodies: false  # Disabled - can reduce readability
     

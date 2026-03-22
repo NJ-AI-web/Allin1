@@ -5,6 +5,7 @@
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:hive/hive.dart';
 
 const Color kSurface = Color(0xFF0D0D18);
 const Color kCard = Color(0xFF141420);
@@ -48,9 +49,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           icon: const Icon(Icons.arrow_back_ios_new, color: kText),
           onPressed: () => Navigator.pop(context),
         ),
-        title: Text('Settings',
-            style:
-                GoogleFonts.outfit(color: kText, fontWeight: FontWeight.w600),),
+        title: Text(
+          'Settings',
+          style: GoogleFonts.outfit(color: kText, fontWeight: FontWeight.w600),
+        ),
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),
@@ -290,17 +292,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: GoogleFonts.outfit(
-                      color: kText,
-                      fontSize: 15,
-                      fontWeight: FontWeight.w500,
-                    ),),
-                Text(subtitle,
-                    style: GoogleFonts.outfit(
-                      color: kMuted,
-                      fontSize: 12,
-                    ),),
+                Text(
+                  title,
+                  style: GoogleFonts.outfit(
+                    color: kText,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                Text(
+                  subtitle,
+                  style: GoogleFonts.outfit(
+                    color: kMuted,
+                    fontSize: 12,
+                  ),
+                ),
               ],
             ),
           ),
@@ -346,17 +352,21 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(title,
-                        style: GoogleFonts.outfit(
-                          color: titleColor ?? kText,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),),
-                    Text(subtitle,
-                        style: GoogleFonts.outfit(
-                          color: kMuted,
-                          fontSize: 12,
-                        ),),
+                    Text(
+                      title,
+                      style: GoogleFonts.outfit(
+                        color: titleColor ?? kText,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    Text(
+                      subtitle,
+                      style: GoogleFonts.outfit(
+                        color: kMuted,
+                        fontSize: 12,
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -409,65 +419,205 @@ class _SettingsScreenState extends State<SettingsScreen> {
     );
   }
 
+  static const List<Map<String, String>> _languages = [
+    {
+      'code': 'english',
+      'name': 'English',
+      'emoji': 'EN',
+      'desc': 'All text in English',
+    },
+    {
+      'code': 'tamil',
+      'name': 'Tamil',
+      'emoji': 'TM',
+      'desc': 'Muzukka Tamilil',
+    },
+    {
+      'code': 'thanglish',
+      'name': 'Thanglish',
+      'emoji': 'TG',
+      'desc': 'Tamil words in English letters',
+    },
+    {
+      'code': 'tamil_tech',
+      'name': 'Tamil + Tech',
+      'emoji': 'TT',
+      'desc': 'Mainly Tamil, technical = English',
+    },
+  ];
+
   void _showLanguagePicker() {
-    showModalBottomSheet(
+    const List<Map<String, String>> langs = _languages;
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: kCard2,
+      isScrollControlled: true,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
-      builder: (ctx) => Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Select Language',
-                style: GoogleFonts.outfit(
-                  color: kText,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),),
-            const SizedBox(height: 16),
-            _buildLanguageOption('English', 'English'),
-            _buildLanguageOption('தமிழ்', 'Tamil'),
-            _buildLanguageOption('हिंदी', 'Hindi'),
-          ],
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx2, setSheet) => Padding(
+          padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 40,
+                  height: 4,
+                  margin: const EdgeInsets.only(bottom: 16),
+                  decoration: BoxDecoration(
+                    color: kMuted.withValues(alpha: 0.4),
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  const Icon(Icons.language_rounded, color: kGold, size: 22),
+                  const SizedBox(width: 8),
+                  Text(
+                    'Language / Mozhi',
+                    style: GoogleFonts.outfit(
+                      color: kText,
+                      fontSize: 18,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 4),
+              Text(
+                'App text style select pannunga',
+                style: GoogleFonts.outfit(color: kMuted, fontSize: 11),
+              ),
+              const SizedBox(height: 20),
+              ...langs.map((lang) {
+                final isSel = _selectedLanguage == lang['name'];
+                return GestureDetector(
+                  onTap: () {
+                    setState(() => _selectedLanguage = lang['name']!);
+                    setSheet(() {});
+                    try {
+                      Hive.box<String>('settings')
+                          .put('language', lang['code'] ?? 'en');
+                    } catch (_) {}
+                    Future<void>.delayed(const Duration(milliseconds: 250), () {
+                      if (ctx2.mounted) Navigator.pop(ctx2);
+                    });
+                  },
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.only(bottom: 10),
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: isSel ? kGold.withValues(alpha: 0.08) : kCard,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: isSel
+                            ? kGold.withValues(alpha: 0.5)
+                            : const Color(0x1AFFFFFF),
+                        width: isSel ? 1.5 : 1,
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: isSel
+                                ? kGold.withValues(alpha: 0.12)
+                                : const Color(0x0FFFFFFF),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Center(
+                            child: Text(
+                              lang['emoji']!,
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w800,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                lang['name']!,
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  fontWeight: FontWeight.w700,
+                                  color: isSel ? kGold : kText,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                lang['desc']!,
+                                style: GoogleFonts.outfit(
+                                  fontSize: 11,
+                                  color: kMuted,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        if (isSel)
+                          const Icon(
+                            Icons.check_circle_rounded,
+                            color: kGold,
+                            size: 22,
+                          )
+                        else
+                          const Icon(
+                            Icons.radio_button_unchecked,
+                            color: Color(0x33FFFFFF),
+                            size: 22,
+                          ),
+                      ],
+                    ),
+                  ),
+                );
+              }),
+              const SizedBox(height: 10),
+              Container(
+                padding: const EdgeInsets.all(11),
+                decoration: BoxDecoration(
+                  color: const Color(0x0F7B6FE0),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0x1A7B6FE0)),
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.info_outline,
+                      size: 13,
+                      color: Color(0xFF9B8FF0),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'Language change next restart-la apply agum.',
+                        style: GoogleFonts.outfit(fontSize: 10, color: kMuted),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
         ),
       ),
-    );
-  }
-
-  Widget _buildLanguageOption(String lang, String name) {
-    final isSelected = _selectedLanguage == lang;
-    return ListTile(
-      onTap: () {
-        setState(() => _selectedLanguage = lang);
-        Navigator.pop(context);
-      },
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: isSelected ? kGold.withValues(alpha: 0.1) : kCard,
-          borderRadius: BorderRadius.circular(10),
-        ),
-        child: Center(
-          child: Text(lang[0],
-              style: GoogleFonts.outfit(
-                color: isSelected ? kGold : kMuted,
-                fontWeight: FontWeight.bold,
-              ),),
-        ),
-      ),
-      title: Text(name, style: GoogleFonts.outfit(color: kText)),
-      trailing:
-          isSelected ? const Icon(Icons.check_circle, color: kGold) : null,
     );
   }
 
   void _showCurrencyPicker() {
-    showModalBottomSheet(
+    showModalBottomSheet<void>(
       context: context,
       backgroundColor: kCard2,
       shape: const RoundedRectangleBorder(
@@ -479,12 +629,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Select Currency',
-                style: GoogleFonts.outfit(
-                  color: kText,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),),
+            Text(
+              'Select Currency',
+              style: GoogleFonts.outfit(
+                color: kText,
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
             const SizedBox(height: 16),
             _buildCurrencyOption('INR (₹)', 'Indian Rupee'),
             _buildCurrencyOption(r'USD ($)', 'US Dollar'),
@@ -510,11 +662,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
           borderRadius: BorderRadius.circular(10),
         ),
         child: Center(
-          child: Text(currency.split(' ')[0],
-              style: GoogleFonts.outfit(
-                color: isSelected ? kGold : kMuted,
-                fontWeight: FontWeight.bold,
-              ),),
+          child: Text(
+            currency.split(' ')[0],
+            style: GoogleFonts.outfit(
+              color: isSelected ? kGold : kMuted,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
         ),
       ),
       title: Text(name, style: GoogleFonts.outfit(color: kText)),
@@ -524,14 +678,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
   }
 
   void _showDeleteAccountDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: kCard2,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text('Delete Account?',
-            style:
-                GoogleFonts.outfit(color: kText, fontWeight: FontWeight.w600),),
+        title: Text(
+          'Delete Account?',
+          style: GoogleFonts.outfit(color: kText, fontWeight: FontWeight.w600),
+        ),
         content: Text(
           'This action cannot be undone. All your data including ride history, saved addresses, and payment methods will be permanently deleted.',
           style: GoogleFonts.outfit(color: kMuted),
@@ -544,17 +699,24 @@ class _SettingsScreenState extends State<SettingsScreen> {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                content: Text(
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
                     'Account deletion requested. Contact support for assistance.',
-                    style: GoogleFonts.notoSansTamil(color: Colors.white),),
-                backgroundColor: kOrange,
-                behavior: SnackBarBehavior.floating,
-              ),);
+                    style: GoogleFonts.notoSansTamil(color: Colors.white),
+                  ),
+                  backgroundColor: kOrange,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
             },
-            child: Text('Delete',
-                style: GoogleFonts.outfit(
-                    color: kRed, fontWeight: FontWeight.w600,),),
+            child: Text(
+              'Delete',
+              style: GoogleFonts.outfit(
+                color: kRed,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ),
         ],
       ),

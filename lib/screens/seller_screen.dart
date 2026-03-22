@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -74,7 +75,7 @@ class _Hero extends StatelessWidget {
             style: GoogleFonts.outfit(color: kMuted, fontSize: 13),
           ),
           const SizedBox(height: 14),
-          Wrap(
+          const Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
@@ -110,15 +111,22 @@ class _Pill extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('text', text));
+    properties.add(ColorProperty('color', color));
+  }
 }
 
 class _KpiRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    return Wrap(
+    return const Wrap(
       spacing: 12,
       runSpacing: 12,
-      children: const [
+      children: [
         _KpiCard(label: 'Orders Today', value: '42'),
         _KpiCard(label: 'Revenue', value: '₹ 18,900'),
         _KpiCard(label: 'Avg Prep Time', value: '12 min'),
@@ -159,6 +167,13 @@ class _KpiCard extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('label', label));
+    properties.add(StringProperty('value', value));
+  }
 }
 
 class _FeatureList extends StatelessWidget {
@@ -197,48 +212,16 @@ class _FeatureList extends StatelessWidget {
                 const Icon(Icons.check_circle, color: kGreen, size: 16),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(i,
-                      style: GoogleFonts.outfit(color: kText, fontSize: 12)),
+                  child: Text(
+                    i,
+                    style: GoogleFonts.outfit(color: kText, fontSize: 12),
+                  ),
                 ),
               ],
             ),
           ),
         ),
       ],
-    );
-  }
-}
-
-class _UseCases extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          colors: [kPurple.withValues(alpha: 0.25), kSurface],
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: kBorder),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Use Cases',
-            style: GoogleFonts.spaceGrotesk(
-              color: kText,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            'Restaurants, grocery stores, electronics shops, pharmacies, and '
-            'local services can go live and start receiving orders in minutes.',
-            style: GoogleFonts.outfit(color: kMuted, fontSize: 12, height: 1.5),
-          ),
-        ],
-      ),
     );
   }
 }
@@ -267,7 +250,7 @@ class _CTA extends StatelessWidget {
             onPressed: () {},
             style: OutlinedButton.styleFrom(
               foregroundColor: kText,
-              side: BorderSide(color: kBorder),
+              side: const BorderSide(color: kBorder),
             ),
             child: const Text('Manage Catalog'),
           ),

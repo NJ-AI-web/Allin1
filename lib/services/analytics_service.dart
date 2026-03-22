@@ -1,5 +1,5 @@
 // ================================================================
-// Analytics Service - Erode Super App
+// Analytics Service - Allin1 Super App
 // ================================================================
 // Comprehensive analytics and monitoring service using Firebase.
 //
@@ -27,7 +27,7 @@ import 'package:flutter/foundation.dart';
 // Analytics Event Types
 // ================================================================
 
-/// Standard analytics events for the Erode Super App.
+/// Standard analytics events for the Allin1 Super App.
 class AnalyticsEvents {
   // ================================================================
   // User Engagement Events
@@ -347,7 +347,9 @@ class AnalyticsService {
     String? screenClass,
     Map<String, dynamic>? parameters,
   }) async {
-    if (!_isEnabled || !_isInitialized) return;
+    if (!_isEnabled || !_isInitialized) {
+      return;
+    }
 
     try {
       await _analytics!.logScreenView(
@@ -569,7 +571,9 @@ class AnalyticsService {
     required String name,
     required String value,
   }) async {
-    if (!_isInitialized || !_isEnabled) return;
+    if (!_isInitialized || !_isEnabled) {
+      return;
+    }
 
     try {
       await _analytics!.setUserProperty(name: name, value: value);
@@ -597,7 +601,9 @@ class AnalyticsService {
     String? reason,
     bool fatal = false,
   }) async {
-    if (!_isInitialized) return;
+    if (!_isInitialized) {
+      return;
+    }
 
     try {
       if (fatal) {
@@ -628,7 +634,9 @@ class AnalyticsService {
     required String key,
     required String value,
   }) async {
-    if (!_isInitialized) return;
+    if (!_isInitialized) {
+      return;
+    }
 
     try {
       await _crashlytics?.setCustomKey(key, value);
@@ -642,7 +650,9 @@ class AnalyticsService {
     required String key,
     required int value,
   }) async {
-    if (!_isInitialized) return;
+    if (!_isInitialized) {
+      return;
+    }
 
     try {
       await _crashlytics?.setCustomKey(key, value);
@@ -656,7 +666,9 @@ class AnalyticsService {
     required String key,
     required double value,
   }) async {
-    if (!_isInitialized) return;
+    if (!_isInitialized) {
+      return;
+    }
 
     try {
       await _crashlytics?.setCustomKey(key, value);
@@ -670,7 +682,9 @@ class AnalyticsService {
     required String key,
     required bool value,
   }) async {
-    if (!_isInitialized) return;
+    if (!_isInitialized) {
+      return;
+    }
 
     try {
       await _crashlytics?.setCustomKey(key, value);
@@ -681,7 +695,9 @@ class AnalyticsService {
 
   /// Log a message for crash context.
   Future<void> logCrashlyticsMessage(String message) async {
-    if (!_isInitialized) return;
+    if (!_isInitialized) {
+      return;
+    }
 
     try {
       await _crashlytics?.log(message);
@@ -708,7 +724,9 @@ class AnalyticsService {
   /// }
   /// ```
   TraceHandler? startTrace(String traceName) {
-    if (!_isInitialized || !_isEnabled) return null;
+    if (!_isInitialized || !_isEnabled) {
+      return null;
+    }
 
     try {
       final trace = _performance?.newTrace(traceName);
@@ -727,7 +745,9 @@ class AnalyticsService {
     String url,
     HttpMethod method,
   ) {
-    if (!_isInitialized || !_isEnabled) return null;
+    if (!_isInitialized || !_isEnabled) {
+      return null;
+    }
 
     try {
       final metric = _performance?.newHttpMetric(url, method);
@@ -750,7 +770,8 @@ class AnalyticsService {
     if (_isInitialized) {
       await _analytics?.setAnalyticsCollectionEnabled(enabled);
       debugPrint(
-          '[AnalyticsService] Analytics ${enabled ? 'enabled' : 'disabled'}',);
+        '[AnalyticsService] Analytics ${enabled ? 'enabled' : 'disabled'}',
+      );
     }
   }
 
@@ -773,12 +794,16 @@ class AnalyticsService {
 
   /// Sanitize parameters for Firebase Analytics.
   Map<String, Object>? _sanitizeParameters(Map<String, dynamic>? params) {
-    if (params == null) return null;
+    if (params == null) {
+      return null;
+    }
 
     final sanitized = <String, Object>{};
 
     for (final entry in params.entries) {
-      if (entry.value == null) continue;
+      if (entry.value == null) {
+        continue;
+      }
 
       // Firebase Analytics only supports certain types
       if (entry.value is String ||
@@ -809,19 +834,23 @@ class AnalyticsService {
       _eventQueue.removeAt(0); // Remove oldest
     }
 
-    _eventQueue.add(_QueuedEvent(
-      eventName: eventName,
-      parameters: parameters,
-      value: value,
-      timestamp: DateTime.now(),
-    ),);
+    _eventQueue.add(
+      _QueuedEvent(
+        eventName: eventName,
+        parameters: parameters,
+        value: value,
+        timestamp: DateTime.now(),
+      ),
+    );
 
     debugPrint('[AnalyticsService] Event queued: $eventName');
   }
 
   /// Flush queued events.
   Future<void> _flushQueuedEvents() async {
-    if (!_isInitialized || !_isEnabled) return;
+    if (!_isInitialized || !_isEnabled) {
+      return;
+    }
 
     final events = List.of(_eventQueue);
     _eventQueue.clear();
@@ -905,7 +934,8 @@ class _QueuedEvent {
 
   _QueuedEvent({
     required this.eventName,
-    required this.timestamp, this.parameters,
+    required this.timestamp,
+    this.parameters,
     this.value,
   });
 }

@@ -1,5 +1,5 @@
 // ================================================================
-// SEMANTIC WRAPPER - Accessibility Utilities for Erode Super App
+// SEMANTIC WRAPPER - Accessibility Utilities for Allin1 Super App
 // ================================================================
 //
 // Purpose: Provide reusable Semantics widgets and accessibility
@@ -28,12 +28,10 @@
 // ================================================================
 
 import 'dart:math' as math;
-import 'dart:ui' show PlatformDispatcher;
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
-import 'package:flutter/semantics.dart';
 import 'package:flutter/services.dart';
 
 export 'package:flutter/semantics.dart' show SemanticsService;
@@ -104,7 +102,9 @@ class SemanticButton extends StatelessWidget {
   final ValueChanged<bool>? onFocusChange;
 
   const SemanticButton({
-    required this.label, required this.child, super.key,
+    required this.label,
+    required this.child,
+    super.key,
     this.hint,
     this.isSelected,
     this.enabled = true,
@@ -174,9 +174,15 @@ class SemanticButton extends StatelessWidget {
     properties.add(ObjectFlagProperty<VoidCallback?>.has('onTap', onTap));
     properties.add(DoubleProperty('size', size));
     properties.add(DoubleProperty('borderRadius', borderRadius));
-    properties.add(DiagnosticsProperty<EdgeInsetsGeometry?>('padding', padding));
+    properties
+        .add(DiagnosticsProperty<EdgeInsetsGeometry?>('padding', padding));
     properties.add(DiagnosticsProperty<FocusNode?>('focusNode', focusNode));
-    properties.add(ObjectFlagProperty<ValueChanged<bool>?>.has('onFocusChange', onFocusChange));
+    properties.add(
+      ObjectFlagProperty<ValueChanged<bool>?>.has(
+        'onFocusChange',
+        onFocusChange,
+      ),
+    );
   }
 }
 
@@ -210,7 +216,9 @@ class SemanticLink extends StatelessWidget {
   final bool visited;
 
   const SemanticLink({
-    required this.label, required this.child, super.key,
+    required this.label,
+    required this.child,
+    super.key,
     this.hint,
     this.onTap,
     this.visited = false,
@@ -273,7 +281,9 @@ class SemanticCard extends StatelessWidget {
   final double elevation;
 
   const SemanticCard({
-    required this.label, required this.child, super.key,
+    required this.label,
+    required this.child,
+    super.key,
     this.hint,
     this.onTap,
     this.borderRadius = 16.0,
@@ -349,7 +359,9 @@ class SemanticIconButton extends StatelessWidget {
   final Color? color;
 
   const SemanticIconButton({
-    required this.label, required this.icon, super.key,
+    required this.label,
+    required this.icon,
+    super.key,
     this.hint,
     this.onTap,
     this.iconSize = 24.0,
@@ -511,7 +523,8 @@ class TamilRichText extends StatelessWidget {
   final TextAlign textAlign;
 
   const TamilRichText({
-    required this.children, super.key,
+    required this.children,
+    super.key,
     this.style,
     this.textAlign = TextAlign.start,
   });
@@ -574,7 +587,9 @@ class AccessibleCheckbox extends StatelessWidget {
   final ValueChanged<bool>? onChanged;
 
   const AccessibleCheckbox({
-    required this.label, required this.value, super.key,
+    required this.label,
+    required this.value,
+    super.key,
     this.onChanged,
   });
 
@@ -618,7 +633,9 @@ class AccessibleCheckbox extends StatelessWidget {
     super.debugFillProperties(properties);
     properties.add(StringProperty('label', label));
     properties.add(DiagnosticsProperty<bool>('value', value));
-    properties.add(ObjectFlagProperty<ValueChanged<bool>?>.has('onChanged', onChanged));
+    properties.add(
+      ObjectFlagProperty<ValueChanged<bool>?>.has('onChanged', onChanged),
+    );
   }
 }
 
@@ -647,7 +664,8 @@ class LiveRegion extends StatelessWidget {
   final Politeness politeness;
 
   const LiveRegion({
-    required this.child, super.key,
+    required this.child,
+    super.key,
     this.politeness = Politeness.polite,
   });
 
@@ -702,7 +720,9 @@ class SkipLink extends StatelessWidget {
   final VoidCallback? onSkip;
 
   const SkipLink({
-    required this.label, required this.focusNodeId, super.key,
+    required this.label,
+    required this.focusNodeId,
+    super.key,
     this.onSkip,
   });
 
@@ -752,8 +772,10 @@ bool shouldReduceMotion(BuildContext context) {
 }
 
 /// Get the appropriate animation duration based on accessibility settings
-Duration getAnimationDuration(BuildContext context,
-    {Duration normal = const Duration(milliseconds: 300),}) {
+Duration getAnimationDuration(
+  BuildContext context, {
+  Duration normal = const Duration(milliseconds: 300),
+}) {
   if (shouldReduceMotion(context)) {
     return Duration.zero;
   }
@@ -761,8 +783,11 @@ Duration getAnimationDuration(BuildContext context,
 }
 
 /// Get text scale factor with reasonable limits
-double getTextScaleFactor(BuildContext context,
-    {double min = 0.8, double max = 2.0,}) {
+double getTextScaleFactor(
+  BuildContext context, {
+  double min = 0.8,
+  double max = 2.0,
+}) {
   return MediaQuery.of(context).textScaler.scale(1).clamp(min, max);
 }
 
@@ -776,7 +801,11 @@ Size ensureMinTouchTarget(Size current, {double minSize = kMinTouchTarget}) {
 
 /// Announce a message to screen readers
 void announceToScreenReader(String message) {
-  SemanticsService.sendAnnouncement(PlatformDispatcher.instance.implicitView!, message, TextDirection.ltr);
+  SemanticsService.sendAnnouncement(
+    PlatformDispatcher.instance.implicitView!,
+    message,
+    TextDirection.ltr,
+  );
 }
 
 /// Request focus for a specific node
@@ -807,16 +836,22 @@ double calculateContrastRatio(Color foreground, Color background) {
 }
 
 /// Check if a color pair meets WCAG AA requirements
-bool meetsWcagAA(Color foreground, Color background,
-    {bool isLargeText = false,}) {
+bool meetsWcagAA(
+  Color foreground,
+  Color background, {
+  bool isLargeText = false,
+}) {
   final ratio = calculateContrastRatio(foreground, background);
   final required = isLargeText ? 3.0 : 4.5;
   return ratio >= required;
 }
 
 /// Check if a color pair meets WCAG AAA requirements
-bool meetsWcagAAA(Color foreground, Color background,
-    {bool isLargeText = false,}) {
+bool meetsWcagAAA(
+  Color foreground,
+  Color background, {
+  bool isLargeText = false,
+}) {
   final ratio = calculateContrastRatio(foreground, background);
   final required = isLargeText ? 4.5 : 7.0;
   return ratio >= required;
@@ -873,5 +908,6 @@ void debugPrintSemanticsTree() {
   // This would require binding to the semantics engine
   // For now, it's a placeholder for future implementation
   debugPrint(
-      'Semantics tree debugging - use Flutter DevTools for detailed view',);
+    'Semantics tree debugging - use Flutter DevTools for detailed view',
+  );
 }

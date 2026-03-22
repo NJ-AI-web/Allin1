@@ -1,5 +1,5 @@
 // ================================================================
-// API Configuration - Erode Super App Backend
+// API Configuration - Allin1 Super App Backend
 // ================================================================
 // Centralized configuration for API endpoints, timeouts, retries,
 // and resilience patterns.
@@ -8,9 +8,7 @@
 // Version: 1.0.0
 // ================================================================
 
-
-
-/// Primary API configuration for the Erode Super App commerce backend.
+/// Primary API configuration for the Allin1 Super App commerce backend.
 ///
 /// This class provides:
 /// - Multiple endpoint URLs with automatic failover
@@ -18,7 +16,7 @@
 /// - Retry policies with exponential backoff
 /// - Rate limiting thresholds
 /// - Cache TTL settings
-class ApiConfig {
+abstract final class ApiConfig {
   // ================================================================
   // API Endpoints
   // ================================================================
@@ -208,8 +206,6 @@ class ApiConfig {
     return primaryBaseUrl;
   }
 
-
-
   /// Build full URL from endpoint path
   static String buildUrl(String endpoint, {bool useFailover = false}) {
     final base = useFailover ? failoverBaseUrl : primaryBaseUrl;
@@ -225,8 +221,8 @@ class ApiConfig {
   ///
   /// [attempt] is the current retry attempt number (1-based)
   static Duration calculateRetryDelay(int attempt) {
-    final delayMs = initialRetryDelayMs *
-        retryMultiplier.pow(attempt - 1).toInt();
+    final delayMs =
+        initialRetryDelayMs * retryMultiplier.pow(attempt - 1).toInt();
     return Duration(
       milliseconds: delayMs.clamp(0, maxRetryDelayMs),
     );

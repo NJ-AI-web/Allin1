@@ -3,13 +3,14 @@
 // Allin1 Super App v1.0
 // ================================================================
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
+
 import '../services/session_service.dart';
 
 // ── Theme Colors ─────────────────────────────────────────────
-const Color kBg = Color(0xFF08080F);
+const Color kBg = Color(0xFF0A0A1A);
 const Color kSurface = Color(0xFF0D0D18);
 const Color kCard = Color(0xFF141420);
 const Color kCard2 = Color(0xFF1A1A28);
@@ -47,7 +48,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
           .collection('users')
           .where('userType', isEqualTo: 1) // Regular users
           .get();
-      
+
       final ridersSnapshot = await FirebaseFirestore.instance
           .collection('users')
           .where('userType', isEqualTo: 0) // Riders
@@ -77,7 +78,6 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBg,
       appBar: AppBar(
         backgroundColor: kSurface,
         title: Text(
@@ -88,7 +88,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         actions: [
           IconButton(
             icon: const Icon(Icons.logout, color: kText),
-            onPressed: () => _showLogoutDialog(),
+            onPressed: _showLogoutDialog,
           ),
         ],
       ),
@@ -105,7 +105,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     padding: const EdgeInsets.all(20),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
-                        colors: [kOrange, kOrange.withOpacity(0.7)],
+                        colors: [kOrange, kOrange.withAlpha(179)],
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                       ),
@@ -114,8 +114,11 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Icon(Icons.admin_panel_settings, 
-                            color: Colors.white, size: 40),
+                        const Icon(
+                          Icons.admin_panel_settings,
+                          color: Colors.white,
+                          size: 40,
+                        ),
                         const SizedBox(height: 12),
                         Text(
                           'Welcome, Admin!',
@@ -145,7 +148,7 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     ),
                   ),
                   const SizedBox(height: 12),
-                  
+
                   Row(
                     children: [
                       Expanded(
@@ -167,9 +170,9 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 12),
-                  
+
                   Row(
                     children: [
                       Expanded(
@@ -210,31 +213,31 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
                     title: 'Verify Riders',
                     subtitle: 'Review and approve rider applications',
                     color: kGreen,
-                    onTap: () => _navigateToRiderVerification(),
+                    onTap: _navigateToRiderVerification,
                   ),
-                  
+
                   _actionTile(
                     icon: Icons.people_outline,
                     title: 'Manage Users',
                     subtitle: 'View and manage registered users',
                     color: kPurple,
-                    onTap: () => _showComingSoon(),
+                    onTap: _showComingSoon,
                   ),
-                  
+
                   _actionTile(
                     icon: Icons.analytics,
                     title: 'Analytics',
                     subtitle: 'View platform analytics',
                     color: kOrange,
-                    onTap: () => _showComingSoon(),
+                    onTap: _showComingSoon,
                   ),
-                  
+
                   _actionTile(
                     icon: Icons.settings,
                     title: 'Settings',
                     subtitle: 'Configure platform settings',
                     color: kMuted,
-                    onTap: () => _showComingSoon(),
+                    onTap: _showComingSoon,
                   ),
                 ],
               ),
@@ -294,13 +297,14 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
         leading: Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: color.withOpacity(0.2),
+            color: color.withAlpha(51),
             borderRadius: BorderRadius.circular(10),
           ),
           child: Icon(icon, color: color),
         ),
         title: Text(title, style: const TextStyle(color: kText)),
-        subtitle: Text(subtitle, style: const TextStyle(color: kMuted, fontSize: 12)),
+        subtitle:
+            Text(subtitle, style: const TextStyle(color: kMuted, fontSize: 12)),
         trailing: const Icon(Icons.chevron_right, color: kMuted),
       ),
     );
@@ -310,18 +314,20 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
     // Navigate to rider verification screen
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (_) => const RiderVerificationScreen()),
+      MaterialPageRoute<void>(builder: (_) => const RiderVerificationScreen()),
     );
   }
 
   void _showLogoutDialog() {
-    showDialog(
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: kCard,
         title: const Text('Logout', style: TextStyle(color: kText)),
-        content: const Text('Are you sure you want to logout?', 
-            style: TextStyle(color: kMuted)),
+        content: const Text(
+          'Are you sure you want to logout?',
+          style: TextStyle(color: kMuted),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -331,8 +337,10 @@ class _AdminDashboardScreenState extends State<AdminDashboardScreen> {
             onPressed: () async {
               await SessionService().clearSession();
               if (context.mounted) {
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                    '/login', (route) => false);
+              await Navigator.of(context).pushNamedAndRemoveUntil(
+                  '/login',
+                  (route) => false,
+                );
               }
             },
             style: ElevatedButton.styleFrom(backgroundColor: kRed),
@@ -374,7 +382,8 @@ class RiderVerificationScreen extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(
-                child: CircularProgressIndicator(color: kPurple));
+              child: CircularProgressIndicator(color: kPurple),
+            );
           }
 
           if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
@@ -429,7 +438,7 @@ class RiderVerificationScreen extends StatelessWidget {
           Row(
             children: [
               CircleAvatar(
-                backgroundColor: kPurple.withOpacity(0.2),
+                backgroundColor: kPurple.withAlpha(51),
                 child: Text(
                   username.isNotEmpty ? username[0].toUpperCase() : 'U',
                   style: const TextStyle(color: kPurple),
@@ -443,9 +452,10 @@ class RiderVerificationScreen extends StatelessWidget {
                     Text(
                       username,
                       style: const TextStyle(
-                          color: kText,
-                          fontWeight: FontWeight.w600,
-                          fontSize: 16),
+                        color: kText,
+                        fontWeight: FontWeight.w600,
+                        fontSize: 16,
+                      ),
                     ),
                     Text(
                       email,
@@ -520,8 +530,9 @@ class RiderVerificationScreen extends StatelessWidget {
         backgroundColor: kCard,
         title: const Text('Reject Rider', style: TextStyle(color: kText)),
         content: const Text(
-            'Are you sure you want to reject this rider?',
-            style: TextStyle(color: kMuted)),
+          'Are you sure you want to reject this rider?',
+          style: TextStyle(color: kMuted),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -536,7 +547,7 @@ class RiderVerificationScreen extends StatelessWidget {
       ),
     );
 
-    if (confirmed == true && context.mounted) {
+    if ((confirmed ?? false) && context.mounted) {
       try {
         await FirebaseFirestore.instance
             .collection('users')

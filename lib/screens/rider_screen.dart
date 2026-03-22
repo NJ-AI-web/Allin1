@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -75,7 +76,7 @@ class _Hero extends StatelessWidget {
             style: GoogleFonts.outfit(color: kMuted, fontSize: 13),
           ),
           const SizedBox(height: 14),
-          Wrap(
+          const Wrap(
             spacing: 10,
             runSpacing: 10,
             children: [
@@ -110,6 +111,13 @@ class _Pill extends StatelessWidget {
       ),
     );
   }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(StringProperty('text', text));
+    properties.add(ColorProperty('color', color));
+  }
 }
 
 class _EarningsCard extends StatelessWidget {
@@ -132,19 +140,25 @@ class _EarningsCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Daily Earnings',
-                    style: GoogleFonts.outfit(color: kMuted, fontSize: 12)),
+                Text(
+                  'Daily Earnings',
+                  style: GoogleFonts.outfit(color: kMuted, fontSize: 12),
+                ),
                 const SizedBox(height: 4),
-                Text('Track rides, tips, and bonuses',
-                    style: GoogleFonts.outfit(color: kText, fontSize: 13)),
+                Text(
+                  'Track rides, tips, and bonuses',
+                  style: GoogleFonts.outfit(color: kText, fontSize: 13),
+                ),
               ],
             ),
           ),
-          Text('₹ 1,250',
-              style: GoogleFonts.spaceGrotesk(
-                color: kGold,
-                fontWeight: FontWeight.w700,
-              )),
+          Text(
+            '₹ 1,250',
+            style: GoogleFonts.spaceGrotesk(
+              color: kGold,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ],
       ),
     );
@@ -187,8 +201,10 @@ class _FeatureList extends StatelessWidget {
                 const Icon(Icons.check_circle, color: kGreen, size: 16),
                 const SizedBox(width: 10),
                 Expanded(
-                  child: Text(i,
-                      style: GoogleFonts.outfit(color: kText, fontSize: 12)),
+                  child: Text(
+                    i,
+                    style: GoogleFonts.outfit(color: kText, fontSize: 12),
+                  ),
                 ),
               ],
             ),
@@ -223,7 +239,7 @@ class _CTA extends StatelessWidget {
             onPressed: () {},
             style: OutlinedButton.styleFrom(
               foregroundColor: kText,
-              side: BorderSide(color: kBorder),
+              side: const BorderSide(color: kBorder),
             ),
             child: const Text('Go Online'),
           ),

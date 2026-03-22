@@ -14,20 +14,22 @@
 // ================================================================
 
 import 'dart:math';
+
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:latlong2/latlong.dart';
 import 'package:url_launcher/url_launcher.dart';
+
 import 'payment_screen.dart';
 
 // ── Theme (matches main.dart exactly) ───────────────────────────
-const Color kBg = Color(0xFF08080F);
+const Color kBg = Color(0xFF0A0A1A);
 const Color kSurface = Color(0xFF0D0D18);
 const Color kCard = Color(0xFF141420);
 const Color kCard2 = Color(0xFF1A1A28);
@@ -201,7 +203,9 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
   void _onChanged() {
     final p = _pickupCtrl.text.trim().isNotEmpty;
     final d = _dropCtrl.text.trim().isNotEmpty;
-    if (p == _pickupSet && d == _dropSet) return;
+    if (p == _pickupSet && d == _dropSet) {
+      return;
+    }
     setState(() {
       _pickupSet = p;
       _dropSet = d;
@@ -209,7 +213,7 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
     if (p && d) {
       _slideCtrl.forward();
       setState(() => _showFare = true);
-      Future.delayed(const Duration(milliseconds: 300), _fitMap);
+      Future<void>.delayed(const Duration(milliseconds: 300), _fitMap);
     } else {
       _slideCtrl.reverse();
       setState(() => _showFare = false);
@@ -217,7 +221,9 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
   }
 
   void _fitMap() {
-    if (!_pickupSet || !_dropSet) return;
+    if (!_pickupSet || !_dropSet) {
+      return;
+    }
     final bounds = LatLngBounds.fromPoints([_pickupPos, _dropPos]);
     _mapCtrl.fitCamera(
       CameraFit.bounds(
@@ -229,7 +235,9 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
 
   // Build bezier-curve route (3-point quadratic)
   List<LatLng> _buildRoute() {
-    if (!_pickupSet || !_dropSet) return [];
+    if (!_pickupSet || !_dropSet) {
+      return [];
+    }
     final mid = LatLng(
       (_pickupPos.latitude + _dropPos.latitude) / 2 + 0.004,
       (_pickupPos.longitude + _dropPos.longitude) / 2 + 0.003,
@@ -277,15 +285,21 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
     LocationPermission permission;
 
     serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+    if (!serviceEnabled) {
+      return;
+    }
 
     permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+      if (permission == LocationPermission.denied) {
+        return;
+      }
     }
 
-    if (permission == LocationPermission.deniedForever) return;
+    if (permission == LocationPermission.deniedForever) {
+      return;
+    }
 
     setState(() => _pickupCtrl.text = 'Fetching location...');
 
@@ -365,7 +379,6 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
         : MediaQuery.of(context).size.height * 0.38;
 
     return Scaffold(
-      backgroundColor: kBg,
       body: Stack(
         children: [
           // ── Layer 1: Real OSM Map ─────────────────────────────
@@ -389,8 +402,8 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
                     end: Alignment.bottomCenter,
                     colors: [
                       Colors.transparent,
-                      Color(0xEB08080F),
-                      Color(0xFF08080F),
+                      Color(0xEB0A0A1A),
+                      Color(0xFF0A0A1A),
                     ],
                     stops: [0.0, 0.28, 0.55],
                   ),
@@ -736,7 +749,7 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
                       fontWeight: FontWeight.w500,
                     ),
                     decoration: InputDecoration(
-                      hintText: 'Pickup — எங்கே இருக்கீங்க?',
+                      hintText: 'Pickup — Where are you?',
                       hintStyle: const TextStyle(fontSize: 13, color: kMuted),
                       border: InputBorder.none,
                       isDense: true,
@@ -824,7 +837,7 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
                       fontWeight: FontWeight.w500,
                     ),
                     decoration: const InputDecoration(
-                      hintText: 'Drop — எங்கே போகணும்?',
+                      hintText: 'Drop — Where to go?',
                       hintStyle: TextStyle(fontSize: 13, color: kMuted),
                       border: InputBorder.none,
                       isDense: true,
@@ -1188,9 +1201,11 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
     return GestureDetector(
       onTap: () async {
         final uri = Uri.parse(
-          'https://wa.me/918681869091?text=${Uri.encodeComponent('NJ TECH Rider-ஆக join பண்ண விரும்புகிறேன்! 🏍️')}',
+          'https://wa.me/918681869091?text=${Uri.encodeComponent('I want to join as an Allin1 Hero! 🏍️')}',
         );
-        if (await canLaunchUrl(uri)) await launchUrl(uri);
+        if (await canLaunchUrl(uri)) {
+          await launchUrl(uri);
+        }
       },
       child: Container(
         padding: const EdgeInsets.all(18),
@@ -1251,7 +1266,7 @@ class _BikeTaxiScreenState extends State<BikeTaxiScreen>
                   ),
                   const SizedBox(height: 10),
                   Text(
-                    'NJ TECH Rider\nஆவீர்களா? 🏍️',
+                    'Become an Allin1\nHero? 🏍️',
                     style: GoogleFonts.notoSansTamil(
                       fontSize: 18,
                       fontWeight: FontWeight.w800,
@@ -1488,8 +1503,9 @@ class _PinMarker extends StatelessWidget {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(ColorProperty('color', color));
-    properties.add(DiagnosticsProperty<IconData>('icon', icon));
+    properties
+      ..add(ColorProperty('color', color))
+      ..add(DiagnosticsProperty<IconData>('icon', icon));
   }
 }
 
@@ -1624,10 +1640,11 @@ class _BookSheet extends StatefulWidget {
   @override
   void debugFillProperties(DiagnosticPropertiesBuilder properties) {
     super.debugFillProperties(properties);
-    properties.add(DiagnosticsProperty<_RideType>('ride', ride));
-    properties.add(StringProperty('pickup', pickup));
-    properties.add(StringProperty('drop', drop));
-    properties.add(DoubleProperty('distKm', distKm));
+    properties
+      ..add(DiagnosticsProperty<_RideType>('ride', ride))
+      ..add(StringProperty('pickup', pickup))
+      ..add(StringProperty('drop', drop))
+      ..add(DoubleProperty('distKm', distKm));
   }
 }
 
@@ -1684,8 +1701,14 @@ class _BookSheetState extends State<_BookSheet> {
           .doc(doc.id)
           .snapshots()
           .listen((snap) {
-        if (!mounted || !snap.exists) return;
-        final data = snap.data()!;
+        if (!mounted || !snap.exists) {
+          return;
+        }
+        final data = snap.data();
+        if (data == null) {
+          return;
+        }
+
         final status = data['status'] as String? ?? 'pending';
         if (status == 'accepted' && !_accepted) {
           setState(() {
@@ -1711,43 +1734,55 @@ class _BookSheetState extends State<_BookSheet> {
       });
     } catch (e) {
       setState(() => _confirming = false);
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error: $e'),
-          backgroundColor: const Color(0xFFE05555),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      if (!mounted) {
+        return;
+      }
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('Error: $e'),
+            backgroundColor: const Color(0xFFE05555),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
     }
   }
 
   Future<void> _cancelRide() async {
-    if (_rideDocId.isEmpty) return;
+    if (_rideDocId.isEmpty) {
+      return;
+    }
     await FirebaseFirestore.instance
         .collection('rides')
         .doc(_rideDocId)
         .update({'status': 'cancelled'});
-    if (mounted) Navigator.pop(context);
+    if (mounted) {
+      Navigator.pop(context);
+    }
   }
 
   Future<void> _payUPI() async {
-    Navigator.push(
+    await Navigator.push(
       context,
-      MaterialPageRoute(
+      MaterialPageRoute<void>(
         builder: (_) => PaymentScreen(
           amount: _fare.toDouble(),
           note: 'Bike Taxi Ride',
-          orderId: _rideDocId.isNotEmpty ? _rideDocId : null,
+          rideDocId: _rideDocId.isNotEmpty ? _rideDocId : null,
         ),
       ),
     );
   }
 
   Future<void> _callCaptain() async {
-    if (_captainPhone.isEmpty) return;
+    if (_captainPhone.isEmpty) {
+      return;
+    }
     final uri = Uri.parse('tel:$_captainPhone');
-    if (await canLaunchUrl(uri)) await launchUrl(uri);
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    }
   }
 
   @override
@@ -1857,7 +1892,7 @@ class _BookSheetState extends State<_BookSheet> {
         mainAxisSize: MainAxisSize.min,
         children: [
           const Text(
-            'Map-ல route ready · Confirm பண்ணி Captain-ஐ கண்டுபிடி!',
+            'Route ready on Map · Confirm to find your Hero!',
             style: TextStyle(fontSize: 12, color: kMuted),
             textAlign: TextAlign.center,
           ),
@@ -1923,7 +1958,7 @@ class _BookSheetState extends State<_BookSheet> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Captain தேடுகிறோம்...',
+                        'Finding your Hero...',
                         style: GoogleFonts.notoSansTamil(
                           fontSize: 13,
                           fontWeight: FontWeight.w600,
@@ -2084,7 +2119,7 @@ class _BookSheetState extends State<_BookSheet> {
           ],
           const SizedBox(height: 10),
           const Text(
-            'Captain வரும் வரை wait பண்ணுங்க!',
+            'Wait for your Hero to arrive!',
             style: TextStyle(fontSize: 11, color: kMuted),
           ),
         ],
@@ -2120,7 +2155,7 @@ class _BookSheetState extends State<_BookSheet> {
                         ),
                       ),
                       const Text(
-                        'இப்போ pay பண்ணுங்க!',
+                        'Pay now!',
                         style: TextStyle(fontSize: 11, color: kMuted),
                       ),
                     ],
@@ -2222,7 +2257,7 @@ class _BookSheetState extends State<_BookSheet> {
       children: [
         const SizedBox(height: 14),
         const Text(
-          'Ride எப்படி இருந்தது?',
+          'How was your ride?',
           style: TextStyle(
             fontSize: 14,
             color: kText,
@@ -2258,7 +2293,7 @@ class _BookSheetState extends State<_BookSheet> {
           Padding(
             padding: const EdgeInsets.only(top: 8),
             child: Text(
-              'நன்றி! $_rating star கொடுத்தீங்க 🙏',
+              'Thank you for rating $_rating stars! 🙏',
               style: const TextStyle(fontSize: 12, color: kGreen),
             ),
           ),

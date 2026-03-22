@@ -1,5 +1,5 @@
 // ================================================================
-// API Models - Erode Super App Backend
+// API Models - Allin1 Super App Backend
 // ================================================================
 // Data transfer objects (DTOs) for API requests and responses.
 // Includes serialization/deserialization logic.
@@ -208,7 +208,9 @@ class ChatResponse extends ApiResponse {
 
   ChatResponse({
     required this.response,
-    required super.statusCode, required super.success, this.suggestions = const [],
+    required super.statusCode,
+    required super.success,
+    this.suggestions = const [],
     this.detectedIntent,
     this.confidence,
     this.metadata,
@@ -228,7 +230,7 @@ class ChatResponse extends ApiResponse {
     final responseText = json['response'] as String? ??
         json['message'] as String? ??
         json['reply'] as String? ??
-        'மன்னிக்கவும், பதில் கிடைக்கவில்லை.';
+        'Sorry, no response received.';
 
     final suggestionsJson = json['suggestions'];
     final suggestions = suggestionsJson is List
@@ -310,7 +312,8 @@ class ApiErrorResponse extends ApiResponse {
 
   ApiErrorResponse({
     required this.errorCode,
-    required super.statusCode, this.errorDetails,
+    required super.statusCode,
+    this.errorDetails,
     this.userMessage,
     this.isRetryable = false,
     super.errorMessage,
@@ -326,16 +329,15 @@ class ApiErrorResponse extends ApiResponse {
   }) {
     final errorCode = json['errorCode'] as String? ?? 'UNKNOWN_ERROR';
     final errorDetails = json['details'];
-    final detailsMap = errorDetails is Map<String, dynamic>
-        ? errorDetails
-        : null;
+    final detailsMap =
+        errorDetails is Map<String, dynamic> ? errorDetails : null;
 
     return ApiErrorResponse(
       errorCode: errorCode,
       errorDetails: detailsMap,
       userMessage: json['userMessage'] as String?,
-      isRetryable: json['isRetryable'] as bool? ??
-          _isStatusCodeRetryable(statusCode),
+      isRetryable:
+          json['isRetryable'] as bool? ?? _isStatusCodeRetryable(statusCode),
       statusCode: statusCode,
       errorMessage: json['message'] as String? ?? json['error'] as String?,
       requestId: json['requestId'] as String?,
@@ -377,8 +379,7 @@ class CachedResponse {
   final int ttlSeconds;
 
   /// When the cache expires
-  DateTime get expiresAt =>
-      cachedAt.add(Duration(seconds: ttlSeconds));
+  DateTime get expiresAt => cachedAt.add(Duration(seconds: ttlSeconds));
 
   /// Whether the cache is still valid
   bool get isValid => DateTime.now().isBefore(expiresAt);

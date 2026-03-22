@@ -1,0 +1,23 @@
+{
+  "projects": {},
+  "targets": {
+    "erode-super-app": {
+      "hosting": {
+        "customer": [
+          "my-allin1"
+        ],
+        "seller": [
+          "grow-allin1"
+        ],
+        "admin": [
+          "adminhq-allin1",
+          "hq-allin1"
+        ],
+        "hero": [
+          "hero-allin1"
+        ]
+      }
+    }
+  },
+  "etags": {}
+}

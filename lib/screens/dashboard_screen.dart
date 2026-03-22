@@ -1,478 +1,576 @@
+// ================================================================
+// DashboardScreen v5.0 — Allin1 Super App
+// Fixed: blank screen crash + Modern Grid Tile UI
+// Premium Swiggy/Zepto style dark theme
+// ================================================================
+
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 
+import '../services/local_sync_service.dart';
+
+import 'bike_taxi/bike_booking_screen.dart';
+import 'earn/earn_dashboard_screen.dart';
+import 'earn/rewards_hub_screen.dart';
+
+// ── Theme ────────────────────────────────────────────────────────
+const Color _surface = Color(0xFF12121E);
+const Color _card = Color(0xFF1A1A2A);
+const Color _card2 = Color(0xFF222235);
+const Color _purple = Color(0xFF6C63FF);
+const Color _purple2 = Color(0xFF9B8FF0);
+const Color _orange = Color(0xFFFF6B35);
+const Color _green = Color(0xFF00C853);
+const Color _gold = Color(0xFFFFBB00);
+const Color _red = Color(0xFFFF5252);
+
+const Color _text = Color(0xFFEEEEF5);
+const Color _muted = Color(0xFF7777A0);
+const Color _border = Color(0x1AFFFFFF);
+
+// ── Service tile data ─────────────────────────────────────────────
+class _ServiceTile {
+  final String emoji;
+  final String title;
+  final String subtitle;
+  final Color color;
+  final Color bgColor;
+  final bool isLive;
+  final String badge;
+  const _ServiceTile({
+    required this.emoji,
+    required this.title,
+    required this.subtitle,
+    required this.color,
+    required this.bgColor,
+    this.isLive = false,
+    this.badge = '',
+  });
+}
+
+const List<_ServiceTile> _services = [
+  _ServiceTile(
+    emoji: '🏍️',
+    title: 'Bike Taxi',
+    subtitle: 'Fast rides in Erode',
+    color: Color(0xFFFFBB00),
+    bgColor: Color(0xFF1E1A08),
+    isLive: true,
+    badge: 'LIVE',
+  ),
+  _ServiceTile(
+    emoji: '🍔',
+    title: 'Food Delivery',
+    subtitle: '16th Road specials',
+    color: Color(0xFFFF5252),
+    bgColor: Color(0xFF1E0E0E),
+    badge: 'Soon',
+  ),
+  _ServiceTile(
+    emoji: '🛒',
+    title: 'Grocery',
+    subtitle: 'Fresh & fast',
+    color: Color(0xFF00C853),
+    bgColor: Color(0xFF0A1E0E),
+    badge: 'Soon',
+  ),
+  _ServiceTile(
+    emoji: '📱',
+    title: 'Tech Store',
+    subtitle: 'NJ TECH gadgets',
+    color: Color(0xFF6C63FF),
+    bgColor: Color(0xFF10102A),
+    badge: 'Soon',
+  ),
+  _ServiceTile(
+    emoji: '🚗',
+    title: 'Car Taxi',
+    subtitle: 'Comfortable rides',
+    color: Color(0xFF00BCD4),
+    bgColor: Color(0xFF081A1E),
+    badge: 'Soon',
+  ),
+  _ServiceTile(
+    emoji: '💊',
+    title: 'Pharmacy',
+    subtitle: 'Medicines delivered',
+    color: Color(0xFFFF6B35),
+    bgColor: Color(0xFF1E1008),
+    badge: 'Soon',
+  ),
+];
 
 // ================================================================
-// Theme Colors - Dark Theme
+// MAIN SCREEN
 // ================================================================
-const Color kBg = Color(0xFF08080F);
-const Color kSurface = Color(0xFF0D0D18);
-const Color kCard = Color(0xFF141420);
-const Color kCard2 = Color(0xFF1A1A28);
-const Color kPurple = Color(0xFF7B6FE0);
-const Color kPurple2 = Color(0xFF9B8FF0);
-const Color kDarkPurple = Color(0xFF2D1F4E);
-const Color kOrange = Color(0xFFE07C6F);
-const Color kRedBrown = Color(0xFFB85C4A);
-const Color kGreen = Color(0xFF3DBA6F);
-const Color kGold = Color(0xFFF5C542);
-const Color kText = Color(0xFFEEEEF5);
-const Color kMuted = Color(0xFF7777A0);
-const Color kBorder = Color(0x267B6FE0);
-
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
-
   @override
   State<DashboardScreen> createState() => _DashboardScreenState();
 }
 
 class _DashboardScreenState extends State<DashboardScreen> {
-  static const String _foodPrompt =
-      'I want to order food. Show me today’s popular dishes and specials.';
-  static const String _groceryPrompt =
-      'I want to order fresh groceries. Show me vegetables, fruits, and essentials.';
-  static const String _techPrompt =
-      'I need tech accessories. Show me chargers, cables, and earphones with prices.';
-  static const String _chatPrompt =
-      'Hi! I want to place an order. Please guide me.';
+  int _navIndex = 0;
+  User? _user;
 
-  // ================================================================
-  // BUILD
-  // ================================================================
+  @override
+  void initState() {
+    super.initState();
+    // Safely get user — no crash if null
+    try {
+      _user = FirebaseAuth.instance.currentUser;
+    } catch (_) {}
+  }
+
+  String get _firstName {
+    if (_user == null) {
+      return 'Guest';
+    }
+    final name = _user!.displayName ?? _user!.email ?? 'User';
+    return name.split(' ').first;
+  }
+
+  String get _avatarLetter {
+    if (_user == null) {
+      return 'G';
+    }
+    final name = _user!.displayName ?? _user!.email ?? 'U';
+    return name[0].toUpperCase();
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: kBg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          physics: const BouncingScrollPhysics(),
-          child: Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                // 1. Wallet Card at the very top
-                _buildWalletCard(),
-                const SizedBox(height: 24),
-
-                // 2. Tamil Header Text
-                _buildTamilHeader(),
-                const SizedBox(height: 20),
-
-                // 3. AI Chat Card with LIVE NOW badge
-                _buildAIChatCard(),
-                const SizedBox(height: 20),
-
-                // 4. Services Grid - 4 Large Rectangular Cards
-                _buildServicesGrid(),
-                const SizedBox(height: 20),
-              ],
+        child: Column(
+          children: [
+            _buildAppBar(),
+            Expanded(
+              child: _navIndex == 0
+                  ? _HomeTab(user: _user, firstName: _firstName)
+                  : _navIndex == 1
+                      ? const _ComingSoonTab(icon: '💬', label: 'Chat')
+                      : _navIndex == 2
+                          ? const _ComingSoonTab(icon: '🏍️', label: 'My Rides')
+                          : _AccountTab(user: _user),
             ),
-          ),
+          ],
         ),
       ),
-      // Bottom Navigation
       bottomNavigationBar: _buildBottomNav(),
     );
   }
 
-  // ================================================================
-  // 1. WALLET CARD - Allin1 Wallet Balance
-  // ================================================================
-  Widget _buildWalletCard() {
+  // ── APP BAR ──────────────────────────────────────────────────
+  Widget _buildAppBar() {
     return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A1428), Color(0xFF252038)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: kPurple.withValues(alpha: 0.3)),
-        boxShadow: [
-          BoxShadow(
-            color: kPurple.withValues(alpha: 0.15),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
-          ),
-        ],
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: const BoxDecoration(
+        color: _surface,
+        border: Border(bottom: BorderSide(color: _border)),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Wallet Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: kPurple.withValues(alpha: 0.2),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: const Icon(
-                      Icons.account_balance_wallet,
-                      color: kPurple2,
-                      size: 18,
-                    ),
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    'Allin1 Wallet Balance',
-                    style: GoogleFonts.notoSansTamil(
-                      color: kMuted,
-                      fontSize: 13,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: kGreen.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Text(
-                  'Active',
-                  style: GoogleFonts.notoSansTamil(
-                    color: kGreen,
-                    fontSize: 10,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-
-          // Balance
-          Text(
-            '₹ 12,450.00',
-            style: GoogleFonts.notoSansTamil(
-              color: kText,
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          const SizedBox(height: 16),
-
-          // Action Buttons
-          Row(
-            children: [
-              _buildWalletButton(
-                icon: Icons.add_circle_outline,
-                label: 'Add Money',
-                onTap: () => Navigator.pushNamed(context, '/payment'),
-              ),
-              const SizedBox(width: 24),
-              _buildWalletButton(
-                icon: Icons.send,
-                label: 'Transfer',
-                onTap: () => Navigator.pushNamed(context, '/payment'),
-              ),
-            ],
-          ),
-        ],
-      ),
-    ).animate().fadeIn(delay: 150.ms).scale(begin: const Offset(0.95, 0.95));
-  }
-
-  Widget _buildWalletButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
       child: Row(
         children: [
-          Icon(icon, color: kPurple2, size: 18),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: GoogleFonts.notoSansTamil(
-              color: kText,
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
+          // Avatar
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [_purple, _orange],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(12),
             ),
+            child: Center(
+              child: Text(
+                _avatarLetter,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'வணக்கம், $_firstName! 👋',
+                  style: GoogleFonts.notoSansTamil(
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                    color: _text,
+                  ),
+                ),
+                const Text(
+                  'Erode, Tamil Nadu 📍',
+                  style: TextStyle(fontSize: 10, color: _muted),
+                ),
+              ],
+            ),
+          ),
+          // Live badge
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: const Color(0x1A00C853),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0x4D00C853)),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 6,
+                  height: 6,
+                  decoration: const BoxDecoration(
+                    color: _green,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 4),
+                const Text(
+                  'Live',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: _green,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Notification bell
+          Stack(
+            children: [
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: _card,
+                  borderRadius: BorderRadius.circular(11),
+                  border: Border.all(color: _border),
+                ),
+                child: const Icon(
+                  Icons.notifications_outlined,
+                  size: 18,
+                  color: _muted,
+                ),
+              ),
+              Positioned(
+                right: 6,
+                top: 6,
+                child: Container(
+                  width: 8,
+                  height: 8,
+                  decoration: const BoxDecoration(
+                    color: _red,
+                    shape: BoxShape.circle,
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  // ================================================================
-  // 2. TAMIL HEADER TEXT
-  // ================================================================
-  Widget _buildTamilHeader() {
-    return Text(
-      'என்ன வேண்டும் இன்றைக்கு?',
-      style: GoogleFonts.notoSansTamil(
-        color: kText,
-        fontSize: 26,
-        fontWeight: FontWeight.w700,
+  // ── BOTTOM NAV ───────────────────────────────────────────────
+  Widget _buildBottomNav() {
+    final items = [
+      {'icon': Icons.home_rounded, 'label': 'Home'},
+      {'icon': Icons.chat_bubble_outline_rounded, 'label': 'Chat'},
+      {'icon': Icons.history_rounded, 'label': 'Rides'},
+      {'icon': Icons.person_outline_rounded, 'label': 'Account'},
+    ];
+    return Container(
+      padding: const EdgeInsets.fromLTRB(8, 10, 8, 20),
+      decoration: const BoxDecoration(
+        color: _surface,
+        border: Border(top: BorderSide(color: _border)),
       ),
-    ).animate().fadeIn(delay: 200.ms).slideX(begin: -0.1);
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: List.generate(items.length, (i) {
+          final active = i == _navIndex;
+          return GestureDetector(
+            onTap: () => setState(() => _navIndex = i),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              decoration: BoxDecoration(
+                color: active ? const Color(0x1A6C63FF) : Colors.transparent,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    items[i]['icon']! as IconData,
+                    size: 22,
+                    color: active ? _purple2 : _muted,
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    items[i]['label']! as String,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: active ? _purple2 : _muted,
+                      fontWeight: active ? FontWeight.w700 : FontWeight.w400,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+// ================================================================
+// HOME TAB
+// ================================================================
+class _HomeTab extends StatelessWidget {
+  final User? user;
+  final String firstName;
+  const _HomeTab({required this.user, required this.firstName});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Wallet Card
+          _WalletCard(user: user),
+          const SizedBox(height: 16),
+
+          // AI Assistant banner
+          _AIBanner(),
+          const SizedBox(height: 20),
+
+          // Section title
+          Row(
+            children: [
+              Text(
+                'என்ன வேண்டும் இன்றைக்கு?',
+                style: GoogleFonts.notoSansTamil(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w800,
+                  color: _text,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+
+          // SERVICE GRID — Premium 2x3 layout
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: 12,
+              mainAxisSpacing: 12,
+              childAspectRatio: 1.1,
+            ),
+            itemCount: _services.length,
+            itemBuilder: (context, i) => _ServiceGridTile(
+              tile: _services[i],
+              onTap: () {
+                if (_services[i].title == 'Earn Allin1') {
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder<void>(
+                      pageBuilder: (_, __, ___) => const EarnDashboardScreen(),
+                      transitionsBuilder: (_, anim, __, child) =>
+                          FadeTransition(opacity: anim, child: child),
+                    ),
+                  );
+                } else if (_services[i].isLive) {
+                  Navigator.push(
+                    context,
+                    PageRouteBuilder<void>(
+                      pageBuilder: (_, __, ___) => const BikeBookingScreen(),
+                      transitionsBuilder: (_, anim, __, child) =>
+                          FadeTransition(opacity: anim, child: child),
+                    ),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '${_services[i].title} — வெகு விரைவில்! 🚀',
+                        style: GoogleFonts.notoSansTamil(
+                          color: Colors.white,
+                        ),
+                      ),
+                      backgroundColor: _card2,
+                      behavior: SnackBarBehavior.floating,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      duration: const Duration(seconds: 2),
+                    ),
+                  );
+                }
+              },
+            ),
+          ),
+          const SizedBox(height: 20),
+
+          // Promo banner
+          _PromoBanner(),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
   }
 
-  // ================================================================
-  // 3. AI CHAT CARD - Dark Purple with LIVE NOW Badge
-  // ================================================================
-  Widget _buildAIChatCard() {
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<User?>('user', user))
+      ..add(StringProperty('firstName', firstName));
+  }
+}
+
+// ================================================================
+// WALLET CARD
+// ================================================================
+class _WalletCard extends StatelessWidget {
+  final User? user;
+  const _WalletCard({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
     return InkWell(
-      onTap: () => _openChat(_chatPrompt),
+      onTap: () => Navigator.push<void>(
+        context,
+        MaterialPageRoute<void>(builder: (c) => const RewardsHubScreen()),
+      ),
       borderRadius: BorderRadius.circular(20),
       child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           gradient: const LinearGradient(
-            colors: [Color(0xFF2D1F4E), Color(0xFF1A1428)],
+            colors: [Color(0xFF1A1035), Color(0xFF0D0D1E)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),
           borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: kPurple.withValues(alpha: 0.4)),
-          boxShadow: [
+          border: Border.all(color: const Color(0x336C63FF)),
+          boxShadow: const [
             BoxShadow(
-              color: kPurple.withValues(alpha: 0.2),
-              blurRadius: 15,
-              offset: const Offset(0, 6),
+              color: Color(0x336C63FF),
+              blurRadius: 20,
+              offset: Offset(0, 6),
             ),
           ],
         ),
         child: Row(
           children: [
-            // Left Icon
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: kPurple.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: const Icon(
-                Icons.smart_toy_outlined,
-                color: kPurple2,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-
-            // Content
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // LIVE NOW Badge
-                  Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: kGreen,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: Colors.white,
-                            shape: BoxShape.circle,
+                  Row(
+                    children: [
+                      Container(
+                        width: 28,
+                        height: 28,
+                        decoration: BoxDecoration(
+                          color: const Color(0x1A6C63FF),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(color: const Color(0x336C63FF)),
+                        ),
+                        child: const Center(
+                          child: Text(
+                            '₹',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: _purple2,
+                              fontWeight: FontWeight.w800,
+                            ),
                           ),
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'LIVE NOW',
-                          style: GoogleFonts.notoSansTamil(
-                            color: Colors.white,
+                      ),
+                      const SizedBox(width: 8),
+                      const Text(
+                        'Allin1 Wallet',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: _muted,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const Spacer(),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 3,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0x1A00C853),
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: const Color(0x3300C853),
+                          ),
+                        ),
+                        child: const Text(
+                          'Active',
+                          style: TextStyle(
                             fontSize: 9,
+                            color: _green,
                             fontWeight: FontWeight.w700,
-                            letterSpacing: 0.5,
                           ),
                         ),
-                      ],
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  const Text(
+                    '₹ 0.00',
+                    style: TextStyle(
+                      fontSize: 28,
+                      color: _text,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: -0.5,
                     ),
                   ),
-                  const SizedBox(height: 8),
-
-                  // Title
-                  Text(
-                    'Sales Assistant-கிடம் கேளுங்கள்',
-                    style: GoogleFonts.notoSansTamil(
-                      color: kText,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-
-                  // Subtitle
-                  Text(
-                    'Food, Grocery, Tech, Bike Taxi — எதுவும் order பண்ணலாமே',
-                    style: GoogleFonts.notoSansTamil(
-                      color: kMuted,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Right Arrow
-            Container(
-              padding: const EdgeInsets.all(10),
-              decoration: BoxDecoration(
-                color: kPurple.withValues(alpha: 0.2),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: const Icon(
-                Icons.arrow_forward_ios,
-                color: kPurple2,
-                size: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    ).animate().fadeIn(delay: 250.ms).slideY(begin: 0.1);
-  }
-
-  // ================================================================
-  // 4. SERVICES GRID - 4 Large Rectangular Cards
-  // ================================================================
-  Widget _buildServicesGrid() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Food Delivery Card (Red/Brown tint)
-        _buildServiceCard(
-          title: 'Food Delivery',
-          subtitle: 'Delicious meals delivered',
-          icon: Icons.restaurant_menu,
-          gradientColors: [Color(0xFF4A2C2A), Color(0xFF2D1A18)],
-          accentColor: kRedBrown,
-          onTap: () => _openChat(_foodPrompt),
-        ),
-        const SizedBox(height: 12),
-
-        // Grocery Card (Green tint)
-        _buildServiceCard(
-          title: 'Grocery',
-          subtitle: 'Fresh groceries at your door',
-          icon: Icons.local_grocery_store,
-          gradientColors: [Color(0xFF1A3D2A), Color(0xFF0F2418)],
-          accentColor: kGreen,
-          onTap: () => _openChat(_groceryPrompt),
-        ),
-        const SizedBox(height: 12),
-
-        // Tech Accessories Card (Blue/Purple tint)
-        _buildServiceCard(
-          title: 'Tech Accessories',
-          subtitle: 'Latest gadgets & accessories',
-          icon: Icons.devices,
-          gradientColors: [Color(0xFF2A2A4A), Color(0xFF1A1A2D)],
-          accentColor: kPurple,
-          onTap: () => _openChat(_techPrompt),
-        ),
-        const SizedBox(height: 12),
-
-        // Bike Taxi Card (Yellow/Gold tint)
-        _buildServiceCard(
-          title: 'Bike Taxi',
-          subtitle: 'Quick rides at affordable prices',
-          icon: Icons.directions_bike,
-          gradientColors: [Color(0xFF3D3520), Color(0xFF252010)],
-          accentColor: kGold,
-          onTap: () {
-            Navigator.pushNamed(context, '/bike-taxi');
-          },
-        ),
-      ],
-    ).animate().fadeIn(delay: 300.ms).slideY(begin: 0.1);
-  }
-
-  Widget _buildServiceCard({
-    required String title,
-    required String subtitle,
-    required IconData icon,
-    required List<Color> gradientColors,
-    required Color accentColor,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        width: double.infinity,
-        padding: const EdgeInsets.all(18),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: gradientColors,
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: accentColor.withValues(alpha: 0.3)),
-        ),
-        child: Row(
-          children: [
-            // Icon Container
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: accentColor.withValues(alpha: 0.15),
-                borderRadius: BorderRadius.circular(14),
-              ),
-              child: Icon(
-                icon,
-                color: accentColor,
-                size: 28,
-              ),
-            ),
-            const SizedBox(width: 16),
-
-            // Text Content
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: GoogleFonts.notoSansTamil(
-                      color: kText,
-                      fontSize: 17,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    subtitle,
-                    style: GoogleFonts.notoSansTamil(
-                      color: kMuted,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w400,
-                    ),
+                  const SizedBox(height: 12),
+                  const Row(
+                    children: [
+                      _WalletBtn(
+                        icon: Icons.add_circle_outline,
+                        label: 'Add Money',
+                      ),
+                      SizedBox(width: 10),
+                      _WalletBtn(
+                        icon: Icons.send_outlined,
+                        label: 'Transfer',
+                      ),
+                    ],
                   ),
                 ],
               ),
-            ),
-
-            // Arrow
-            Icon(
-              Icons.arrow_forward_ios,
-              color: accentColor,
-              size: 18,
             ),
           ],
         ),
@@ -480,67 +578,539 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  // ================================================================
-  // BOTTOM NAVIGATION
-  // ================================================================
-  Widget _buildBottomNav() {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-      decoration: const BoxDecoration(
-        color: kSurface,
-        border: Border(
-          top: BorderSide(
-            color: kBorder,
-          ),
-        ),
-      ),
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<User?>('user', user));
+  }
+}
+
+class _WalletBtn extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  const _WalletBtn({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {},
       child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        mainAxisSize: MainAxisSize.min,
         children: [
-          GestureDetector(
-            onTap: () => Navigator.popUntil(context, (route) => route.isFirst),
-            child: _buildNavItem(Icons.home_filled, 'Home', true),
-          ),
-          GestureDetector(
-            onTap: () => _openChat(_chatPrompt),
-            child: _buildNavItem(Icons.chat_bubble_outline, 'Chat', false),
-          ),
-          GestureDetector(
-            onTap: () => Navigator.pushNamed(context, '/ride-history'),
-            child: _buildNavItem(Icons.history, 'Rides', false),
-          ),
-          GestureDetector(
-            onTap: () => Navigator.pushNamed(context, '/profile'),
-            child: _buildNavItem(Icons.person_outline, 'Account', false),
+          Icon(icon, size: 14, color: _purple2),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 11,
+              color: _purple2,
+              fontWeight: FontWeight.w600,
+            ),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildNavItem(IconData icon, String label, bool isActive) {
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(
-          icon,
-          color: isActive ? kPurple : kMuted,
-          size: 24,
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<IconData>('icon', icon))
+      ..add(StringProperty('label', label));
+  }
+}
+
+// ================================================================
+// WALLET BALANCE TEXT â€” reads live from Firestore
+// ================================================================
+// ================================================================
+// AI ASSISTANT BANNER
+// ================================================================
+class _AIBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () {},
+      child: Container(
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: const Color(0xFF0E0E20),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: const Color(0x336C63FF)),
         ),
-        const SizedBox(height: 4),
-        Text(
-          label,
-          style: GoogleFonts.notoSansTamil(
-            color: isActive ? kPurple : kMuted,
-            fontSize: 11,
-            fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
+        child: Row(
+          children: [
+            Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [_purple, Color(0xFF9B35FF)],
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                ),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Center(
+                child: Text(
+                  '🤖',
+                  style: TextStyle(fontSize: 22),
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Text(
+                        'Sales Assistant',
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: _text,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: const Color(0x1A00C853),
+                          borderRadius: BorderRadius.circular(6),
+                          border: Border.all(
+                            color: const Color(0x4D00C853),
+                          ),
+                        ),
+                        child: const Text(
+                          'LIVE NOW',
+                          style: TextStyle(
+                            fontSize: 7,
+                            color: _green,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Food, Grocery, Tech, Bike Taxi — எதுவும் order பண்ணலாம்',
+                    style: GoogleFonts.notoSansTamil(
+                      fontSize: 10,
+                      color: _muted,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right,
+              color: _muted,
+              size: 20,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ================================================================
+// PREMIUM SERVICE GRID TILE
+// ================================================================
+class _ServiceGridTile extends StatelessWidget {
+  final _ServiceTile tile;
+  final VoidCallback onTap;
+  const _ServiceGridTile({required this.tile, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
+        decoration: BoxDecoration(
+          color: tile.bgColor,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(
+            color: tile.color.withValues(alpha: tile.isLive ? 0.5 : 0.2),
+            width: tile.isLive ? 1.5 : 1,
+          ),
+          boxShadow: tile.isLive
+              ? [
+                  BoxShadow(
+                    color: tile.color.withValues(alpha: 0.2),
+                    blurRadius: 16,
+                    offset: const Offset(0, 4),
+                  ),
+                ]
+              : null,
+        ),
+        child: Padding(
+          padding: const EdgeInsets.all(14),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Emoji icon
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: tile.color.withValues(alpha: 0.12),
+                      borderRadius: BorderRadius.circular(14),
+                      border: Border.all(
+                        color: tile.color.withValues(alpha: 0.25),
+                      ),
+                    ),
+                    child: Center(
+                      child: Text(
+                        tile.emoji,
+                        style: const TextStyle(fontSize: 22),
+                      ),
+                    ),
+                  ),
+                  // Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 7,
+                      vertical: 3,
+                    ),
+                    decoration: BoxDecoration(
+                      color: tile.isLive
+                          ? tile.color.withValues(alpha: 0.15)
+                          : const Color(0x0FFFFFFF),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: tile.isLive
+                            ? tile.color.withValues(alpha: 0.4)
+                            : const Color(0x1AFFFFFF),
+                      ),
+                    ),
+                    child: Text(
+                      tile.badge,
+                      style: TextStyle(
+                        fontSize: 8,
+                        color: tile.isLive ? tile.color : _muted,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              // Title & subtitle
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    tile.title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                      color: tile.isLive ? _text : const Color(0xAAEEEEF5),
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    tile.subtitle,
+                    style: TextStyle(
+                      fontSize: 10,
+                      color: tile.isLive
+                          ? tile.color.withValues(alpha: 0.8)
+                          : _muted,
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 
-  void _openChat(String message) {
-    Navigator.pushNamed(context, '/chat', arguments: message);
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(DiagnosticsProperty<_ServiceTile>('tile', tile))
+      ..add(ObjectFlagProperty<VoidCallback>.has('onTap', onTap));
+  }
+}
+
+// ================================================================
+// PROMO BANNER
+// ================================================================
+class _PromoBanner extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFF1A1035), Color(0xFF1A1020)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x22FFBB00)),
+      ),
+      child: Row(
+        children: [
+          const Text('🏍️', style: TextStyle(fontSize: 28)),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'உங்கள் முதல் ride FREE!',
+                  style: GoogleFonts.notoSansTamil(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: _gold,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Erode-ல Bike Taxi book பண்ணுங்க',
+                  style: GoogleFonts.notoSansTamil(
+                    fontSize: 10,
+                    color: _muted,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 12,
+              vertical: 6,
+            ),
+            decoration: BoxDecoration(
+              color: const Color(0x1AFFBB00),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: const Color(0x4DFFBB00)),
+            ),
+            child: const Text(
+              'Book →',
+              style: TextStyle(
+                fontSize: 11,
+                color: _gold,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ================================================================
+// COMING SOON TAB
+// ================================================================
+class _ComingSoonTab extends StatelessWidget {
+  final String icon;
+  final String label;
+  const _ComingSoonTab({required this.icon, required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(icon, style: const TextStyle(fontSize: 56)),
+          const SizedBox(height: 16),
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 20,
+              color: _text,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'வெகு விரைவில்...',
+            style: GoogleFonts.notoSansTamil(
+              fontSize: 13,
+              color: _muted,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(StringProperty('icon', icon))
+      ..add(StringProperty('label', label));
+  }
+}
+
+// ================================================================
+// ACCOUNT TAB
+// ================================================================
+class _AccountTab extends StatelessWidget {
+  final User? user;
+  const _AccountTab({required this.user});
+
+  @override
+  Widget build(BuildContext context) {
+    final name = user?.displayName ?? user?.email ?? 'Guest';
+    final email = user?.email ?? '';
+    final isAnon = user?.isAnonymous ?? true;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        children: [
+          const SizedBox(height: 20),
+          // Avatar circle
+          Container(
+            width: 80,
+            height: 80,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [_purple, _orange],
+              ),
+              borderRadius: BorderRadius.circular(24),
+            ),
+            child: Center(
+              child: Text(
+                isAnon ? '👤' : name[0].toUpperCase(),
+                style: const TextStyle(
+                  fontSize: 32,
+                  color: Colors.white,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            isAnon ? 'Guest User' : name,
+            style: const TextStyle(
+              fontSize: 18,
+              color: _text,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          if (email.isNotEmpty) ...[
+            const SizedBox(height: 4),
+            Text(
+              email,
+              style: const TextStyle(
+                fontSize: 12,
+                color: _muted,
+              ),
+            ),
+          ],
+          const SizedBox(height: 24),
+          // Menu items
+          _accountItem(Icons.history_rounded, 'My Rides', () {}),
+          _accountItem(Icons.payment_rounded, 'Payments', () {}),
+          _accountItem(Icons.notifications_outlined, 'Notifications', () {}),
+          _accountItem(Icons.settings_outlined, 'Settings', () {}),
+          const SizedBox(height: 8),
+          // Sign out
+          GestureDetector(
+            onTap: () async {
+              // ── Local-First: wipe cache before signing out ──
+              await LocalSyncService.instance.clearAll();
+              await FirebaseAuth.instance.signOut();
+            },
+            child: Container(
+              margin: const EdgeInsets.only(top: 8),
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: const Color(0x1AFF5252),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0x33FF5252)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.logout_rounded,
+                    size: 18,
+                    color: _red,
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'Sign Out',
+                    style: GoogleFonts.notoSansTamil(
+                      fontSize: 14,
+                      color: _red,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _accountItem(IconData icon, String label, VoidCallback onTap) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        margin: const EdgeInsets.only(bottom: 8),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
+        decoration: BoxDecoration(
+          color: _card,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _border),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 18, color: _purple2),
+            const SizedBox(width: 12),
+            Text(
+              label,
+              style: const TextStyle(
+                fontSize: 14,
+                color: _text,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+            const Spacer(),
+            const Icon(
+              Icons.chevron_right,
+              size: 18,
+              color: _muted,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties.add(DiagnosticsProperty<User?>('user', user));
   }
 }

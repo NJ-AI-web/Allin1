@@ -1,5 +1,5 @@
 // ================================================================
-// API Service - Erode Super App Backend
+// API Service - Allin1 Super App Backend
 // ================================================================
 // Production-ready API service with Dio HTTP client, interceptors,
 // retry logic, caching, and comprehensive error handling.
@@ -19,6 +19,7 @@
 // ================================================================
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:dio/dio.dart';
@@ -38,7 +39,10 @@ import '../models/api_models.dart';
 typedef ApiLogCallback = void Function(LogLevel level, String message);
 
 /// Callback for tracking request metrics
-typedef MetricsCallback = void Function(String endpoint, RequestMetrics metrics);
+typedef MetricsCallback = void Function(
+  String endpoint,
+  RequestMetrics metrics,
+);
 
 // ================================================================
 // Log Level Enum
@@ -112,7 +116,7 @@ class ApiServiceException implements Exception {
 // API Service Class
 // ================================================================
 
-/// Production-ready API service for the Erode Super App.
+/// Production-ready API service for the Allin1 Super App.
 ///
 /// This service provides:
 /// - Thread-safe HTTP client with connection pooling
@@ -138,16 +142,13 @@ class ApiService {
   // Singleton Pattern
   // ================================================================
 
-  static ApiService? _instance;
+  static final ApiService _instance = ApiService._internal();
 
   /// Get the singleton instance of ApiService
-  static ApiService get instance {
-    _instance ??= ApiService._internal();
-    return _instance!;
-  }
+  static ApiService get instance => _instance;
 
   /// Check if the service has been initialized
-  static bool get isInitialized => _instance?._isInitialized ?? false;
+  static bool get isInitialized => _instance._isInitialized;
 
   // ================================================================
   // Internal State
@@ -159,7 +160,7 @@ class ApiService {
   late Dio _dio;
 
   /// Hive box for caching responses
-  late Box _cacheBox;
+  late Box<String> _cacheBox;
 
   /// Request debouncer - tracks pending requests
   final Map<String, Completer<ChatResponse>> _pendingRequests = {};
@@ -232,7 +233,7 @@ class ApiService {
   /// Initialize Hive cache box
   Future<void> _initializeCache() async {
     try {
-      _cacheBox = await Hive.openBox('api_cache');
+      _cacheBox = await Hive.openBox<String>('api_cache');
       _log(LogLevel.debug, 'Cache box initialized');
     } catch (e) {
       _log(LogLevel.error, 'Failed to initialize cache: $e');
@@ -254,7 +255,12 @@ class ApiService {
       },
     );
 
-    _dio = Dio(baseOptions);
+    _dio = Dio(baseOptions)
+      ..interceptors.addAll([
+        _RequestInterceptor(),
+        _ResponseInterceptor(onLog: _log, onMetrics: onMetrics),
+        _ErrorInterceptor(),
+      ]);
 
     // Configure HTTP client with connection pooling (Not supported on Web)
     if (!kIsWeb) {
@@ -266,13 +272,6 @@ class ApiService {
         return client;
       };
     }
-
-    // Add interceptors
-    _dio.interceptors.addAll([
-      _RequestInterceptor(),
-      _ResponseInterceptor(onLog: _log, onMetrics: onMetrics),
-      _ErrorInterceptor(),
-    ]);
 
     _log(LogLevel.debug, 'Dio client configured');
   }
@@ -398,7 +397,7 @@ class ApiService {
       }
     }
 
-    final response = await _dio.post(
+    final response = await _dio.post<Map<String, dynamic>>(
       endpoint,
       data: data,
       options: Options(
@@ -407,7 +406,7 @@ class ApiService {
       ),
     );
 
-    final responseData = response.data as Map<String, dynamic>;
+    final responseData = response.data!;
 
     // Cache if enabled
     if (useCache && cacheTtlSeconds > 0) {
@@ -440,7 +439,7 @@ class ApiService {
       }
     }
 
-    final response = await _dio.get(
+    final response = await _dio.get<Map<String, dynamic>>(
       endpoint,
       queryParameters: queryParameters,
       options: Options(
@@ -449,7 +448,7 @@ class ApiService {
       ),
     );
 
-    final responseData = response.data as Map<String, dynamic>;
+    final responseData = response.data!;
 
     // Cache if enabled
     if (useCache && cacheTtlSeconds > 0) {
@@ -482,7 +481,10 @@ class ApiService {
       for (final key in keysToDelete) {
         await _cacheBox.delete(key);
       }
-      _log(LogLevel.debug, 'Cleared ${keysToDelete.length} cache entries for $endpoint');
+      _log(
+        LogLevel.debug,
+        'Cleared ${keysToDelete.length} cache entries for $endpoint',
+      );
     } catch (e) {
       _log(LogLevel.error, 'Failed to clear cache for endpoint: $e');
     }
@@ -615,8 +617,11 @@ class ApiService {
         if (attempt > 0) {
           // Wait with exponential backoff
           final delay = ApiConfig.calculateRetryDelay(attempt);
-          _log(LogLevel.debug, 'Retry attempt $attempt, waiting ${delay.inMilliseconds}ms');
-          await Future.delayed(delay);
+          _log(
+            LogLevel.debug,
+            'Retry attempt $attempt, waiting ${delay.inMilliseconds}ms',
+          );
+          await Future<void>.delayed(delay);
         }
 
         final response = await _sendRequest(
@@ -634,7 +639,8 @@ class ApiService {
         lastException = e;
         _onFailure(e);
 
-        if (!enableRetry || !ApiConfig.isRetryableStatusCode(e.response?.statusCode ?? 0)) {
+        if (!enableRetry ||
+            !ApiConfig.isRetryableStatusCode(e.response?.statusCode ?? 0)) {
           break;
         }
       } catch (e) {
@@ -664,21 +670,26 @@ class ApiService {
     int cacheTtl = 0,
   }) async {
     final startTime = DateTime.now();
-    final baseUrl = _useFailover ? ApiConfig.failoverBaseUrl : ApiConfig.primaryBaseUrl;
+    final baseUrl =
+        _useFailover ? ApiConfig.failoverBaseUrl : ApiConfig.primaryBaseUrl;
     final url = '$baseUrl$endpoint';
 
     _log(LogLevel.debug, 'Sending request to: $url');
     _log(LogLevel.debug, 'Request ID: ${request.requestId}');
 
     try {
-      final response = await _dio.post(
+      final response = await _dio.post<Map<String, dynamic>>(
         endpoint,
         data: request.toJson(),
         options: Options(
           headers: {
             ApiConfig.requestIdHeader: request.requestId,
             ApiConfig.clientVersionHeader: '1.0.0',
-            ApiConfig.platformHeader: kIsWeb ? 'web' : (Platform.isAndroid ? 'android' : (Platform.isIOS ? 'ios' : 'unknown')),
+            ApiConfig.platformHeader: kIsWeb
+                ? 'web'
+                : (Platform.isAndroid
+                    ? 'android'
+                    : (Platform.isIOS ? 'ios' : 'unknown')),
             if (ApiConfig.qwenAccessToken != null)
               'Authorization': 'Bearer ${ApiConfig.qwenAccessToken}',
           },
@@ -689,13 +700,17 @@ class ApiService {
 
       // Parse response
       final chatResponse = ChatResponse.fromJson(
-        response.data as Map<String, dynamic>,
+        response.data!,
         statusCode: response.statusCode ?? 200,
       );
 
       // Cache if enabled
       if (cacheKey != null && cacheTtl > 0) {
-        await _cacheResponse(cacheKey, response.data as Map<String, dynamic>, cacheTtl);
+        await _cacheResponse(
+          cacheKey,
+          response.data!,
+          cacheTtl,
+        );
       }
 
       // Log performance
@@ -721,10 +736,13 @@ class ApiService {
   }
 
   /// Handle failed request
-  void _onFailure(error) {
+  void _onFailure(Object error) {
     _consecutiveFailures++;
 
-    _log(LogLevel.error, 'Request failed: $error (consecutive failures: $_consecutiveFailures)');
+    _log(
+      LogLevel.error,
+      'Request failed: $error (consecutive failures: $_consecutiveFailures)',
+    );
 
     // Check if circuit breaker should trip
     if (_consecutiveFailures >= ApiConfig.circuitBreakerFailureThreshold) {
@@ -744,13 +762,19 @@ class ApiService {
     );
 
     if (onMetrics != null) {
-      onMetrics!(endpoint, metrics);
+      onMetrics?.call(endpoint, metrics);
     }
 
     if (duration.inMilliseconds > ApiConfig.verySlowRequestThresholdMs) {
-      _log(LogLevel.error, 'Very slow request: ${duration.inMilliseconds}ms for $endpoint');
+      _log(
+        LogLevel.error,
+        'Very slow request: ${duration.inMilliseconds}ms for $endpoint',
+      );
     } else if (duration.inMilliseconds > ApiConfig.slowRequestThresholdMs) {
-      _log(LogLevel.warning, 'Slow request: ${duration.inMilliseconds}ms for $endpoint');
+      _log(
+        LogLevel.warning,
+        'Slow request: ${duration.inMilliseconds}ms for $endpoint',
+      );
     }
   }
 
@@ -759,7 +783,8 @@ class ApiService {
     try {
       final cachedData = _cacheBox.get(cacheKey);
       if (cachedData != null) {
-        final cached = CachedResponse.fromJson(cachedData as Map<String, dynamic>);
+        final decoded = jsonDecode(cachedData) as Map<String, dynamic>;
+        final cached = CachedResponse.fromJson(decoded);
         if (cached.isValid) {
           return ChatResponse(
             response: cached.data['response'] as String? ?? '',
@@ -785,7 +810,7 @@ class ApiService {
   ) async {
     try {
       final cached = CachedResponse.fromApiResponse(data, cacheKey, ttlSeconds);
-      await _cacheBox.put(cacheKey, cached.toJson());
+      await _cacheBox.put(cacheKey, jsonEncode(cached.toJson()));
       _log(LogLevel.debug, 'Cached response for key: $cacheKey');
     } catch (e) {
       _log(LogLevel.error, 'Error caching response: $e');
@@ -798,9 +823,8 @@ class ApiService {
       return;
     }
 
-    if (onLog != null) {
-      onLog!(level, message);
-    } else if (kDebugMode && ApiConfig.enableDebugLogging) {
+    onLog?.call(level, message);
+    if (onLog == null && kDebugMode && ApiConfig.enableDebugLogging) {
       debugPrint('[ApiService/${level.name}] $message');
     }
   }
@@ -831,11 +855,18 @@ class _ResponseInterceptor extends Interceptor {
   final ApiLogCallback? onLog;
   final MetricsCallback? onMetrics;
 
-  _ResponseInterceptor({this.onLog, this.onMetrics});
+  _ResponseInterceptor({
+    required this.onLog,
+    required this.onMetrics,
+  });
 
   @override
-  void onResponse(Response response, ResponseInterceptorHandler handler) {
-    _log(LogLevel.debug, 'Response: ${response.statusCode} for ${response.requestOptions.uri}');
+  void onResponse(
+      Response<dynamic> response, ResponseInterceptorHandler handler,) {
+    _log(
+      LogLevel.debug,
+      'Response: ${response.statusCode} for ${response.requestOptions.uri}',
+    );
 
     // Track metrics
     if (onMetrics != null) {
@@ -846,9 +877,7 @@ class _ResponseInterceptor extends Interceptor {
   }
 
   void _log(LogLevel level, String message) {
-    if (onLog != null) {
-      onLog!(level, message);
-    }
+    onLog?.call(level, message);
   }
 }
 

@@ -21,34 +21,11 @@ class DefaultFirebaseOptions {
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for android - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return android;
       case TargetPlatform.iOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for ios - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
-      case TargetPlatform.macOS:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for macos - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
-      case TargetPlatform.windows:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for windows - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
-      case TargetPlatform.linux:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions have not been configured for linux - '
-          'you can reconfigure this by running the FlutterFire CLI again.',
-        );
+        return ios;
       default:
-        throw UnsupportedError(
-          'DefaultFirebaseOptions are not supported for this platform.',
-        );
+        return web;
     }
   }
 
@@ -60,5 +37,23 @@ class DefaultFirebaseOptions {
     authDomain: 'erode-super-app.firebaseapp.com',
     storageBucket: 'erode-super-app.firebasestorage.app',
     measurementId: 'G-S1SK2TW95E',
+  );
+
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyDipnXQFpwR1Zm4L3-XebKVgc1oPJhReME',
+    appId: '1:357526153693:android:4aee34',
+    messagingSenderId: '357526153693',
+    projectId: 'erode-super-app',
+    authDomain: 'erode-super-app.firebaseapp.com',
+    storageBucket: 'erode-super-app.firebasestorage.app',
+  );
+
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyDipnXQFpwR1Zm4L3-XebKVgc1oPJhReME',
+    appId: '1:357526153693:ios:4aee34',
+    messagingSenderId: '357526153693',
+    projectId: 'erode-super-app',
+    authDomain: 'erode-super-app.firebaseapp.com',
+    storageBucket: 'erode-super-app.firebasestorage.app',
   );
 }

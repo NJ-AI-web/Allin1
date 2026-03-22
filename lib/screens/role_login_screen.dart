@@ -49,3 +49,19 @@ class AdminLoginScreen extends StatelessWidget {
     );
   }
 }
+
+class CustomerLoginScreen extends StatelessWidget {
+  const CustomerLoginScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const LoginScreen(
+      presetUserType: UserType.user,
+      lockUserType: true,
+      lockedUserLabel: 'Customer',
+      title: 'Customer Login',
+      subtitle: 'Access orders, wallet, and support',
+      postLoginRoute: '/dashboard',
+    );
+  }
+}

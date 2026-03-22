@@ -1,131 +1,35 @@
 {
-    "name": "Allin1 Super App - நம்ம ஊரு ஆப்",
-    "short_name": "Allin1",
-    "description": "Allin1 Super App for Food, Grocery, Tech accessories, and Bike Taxi. Order in Tamil or English.",
-    "start_url": "/",
-    "display": "standalone",
-    "background_color": "#08080F",
-    "theme_color": "#7B6FE0",
-    "orientation": "portrait-primary",
-    "prefer_related_applications": false,
-    "categories": ["shopping", "food", "lifestyle", "travel"],
-    "lang": "en",
-    "dir": "ltr",
-    "icons": [
-        {
-            "src": "icons/Icon-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "icons/Icon-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "any"
-        },
-        {
-            "src": "icons/Icon-maskable-192.png",
-            "sizes": "192x192",
-            "type": "image/png",
-            "purpose": "maskable"
-        },
-        {
-            "src": "icons/Icon-maskable-512.png",
-            "sizes": "512x512",
-            "type": "image/png",
-            "purpose": "maskable"
-        }
-    ],
-    "screenshots": [
-        {
-            "src": "screenshots/dashboard.png",
-            "sizes": "1080x1920",
-            "type": "image/png",
-            "form_factor": "narrow",
-            "label": "Allin1 Super App Dashboard - Order Food, Grocery, Tech & Bike Taxi"
-        },
-        {
-            "src": "screenshots/chat.png",
-            "sizes": "1080x1920",
-            "type": "image/png",
-            "form_factor": "narrow",
-            "label": "Voice Chat in Tamil/English - Sales Assistant"
-        },
-        {
-            "src": "screenshots/services.png",
-            "sizes": "1080x1920",
-            "type": "image/png",
-            "form_factor": "narrow",
-            "label": "Our Services - Food Delivery, Grocery, Tech Accessories, Bike Taxi"
-        }
-    ],
-    "shortcuts": [
-        {
-            "name": "Order Food",
-            "short_name": "Food",
-            "description": "Order food from 16th Road restaurants and specials",
-            "url": "/?action=food",
-            "icons": [
-                {
-                    "src": "icons/food-96.png",
-                    "sizes": "96x96",
-                    "type": "image/png"
-                }
-            ]
-        },
-        {
-            "name": "Order Grocery",
-            "short_name": "Grocery",
-            "description": "Order fresh groceries from Allin1 Fresh",
-            "url": "/?action=grocery",
-            "icons": [
-                {
-                    "src": "icons/grocery-96.png",
-                    "sizes": "96x96",
-                    "type": "image/png"
-                }
-            ]
-        },
-        {
-            "name": "Tech Accessories",
-            "short_name": "Tech",
-            "description": "Buy mobile accessories from NJ TECH store",
-            "url": "/?action=tech",
-            "icons": [
-                {
-                    "src": "icons/tech-96.png",
-                    "sizes": "96x96",
-                    "type": "image/png"
-                }
-            ]
-        },
-        {
-            "name": "Book Bike Taxi",
-            "short_name": "Bike",
-            "description": "Book a quick bike ride",
-            "url": "/?action=bike",
-            "icons": [
-                {
-                    "src": "icons/bike-96.png",
-                    "sizes": "96x96",
-                    "type": "image/png"
-                }
-            ]
-        }
-    ],
-    "share_target": {
-        "action": "/share",
-        "method": "POST",
-        "enctype": "multipart/form-data",
-        "params": {
-            "title": "title",
-            "text": "text",
-            "url": "url"
-        }
+  "name": "Allin1 — Order & Ride",
+  "short_name": "Allin1",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0D0D0D",
+  "theme_color": "#FF6B35",
+  "description": "Food, Grocery, Bike Taxi & Tech in Erode",
+  "orientation": "portrait-primary",
+  "prefer_related_applications": false,
+  "icons": [
+    {
+      "src": "icons/Icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
     },
-    "related_applications": [],
-    "scope": "/",
-    "scope_extensions": [],
-    "handle_links": "preferred"
+    {
+      "src": "icons/Icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/Icon-maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/Icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
 }

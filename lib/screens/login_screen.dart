@@ -5,12 +5,13 @@
 // ================================================================
 
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'dashboard_screen.dart';
 import '../services/auth_service.dart';
 import '../services/session_service.dart';
+import 'dashboard_screen.dart';
 
 // ── Theme ──────────────────────────────────────────────────────
 const Color kBg = Color(0xFF08080F);
@@ -45,6 +46,18 @@ class LoginScreen extends StatefulWidget {
   });
   @override
   State<LoginScreen> createState() => _LoginScreenState();
+
+  @override
+  void debugFillProperties(DiagnosticPropertiesBuilder properties) {
+    super.debugFillProperties(properties);
+    properties
+      ..add(EnumProperty<UserType?>('presetUserType', presetUserType))
+      ..add(DiagnosticsProperty<bool>('lockUserType', lockUserType))
+      ..add(StringProperty('title', title))
+      ..add(StringProperty('subtitle', subtitle))
+      ..add(StringProperty('lockedUserLabel', lockedUserLabel))
+      ..add(StringProperty('postLoginRoute', postLoginRoute));
+  }
 }
 
 class _LoginScreenState extends State<LoginScreen>
@@ -52,6 +65,10 @@ class _LoginScreenState extends State<LoginScreen>
   bool _loading = false;
   String _error = '';
   UserType _selectedUserType = UserType.user; // Default to passenger/user
+  bool _needsPhoneNumber = false;
+  final TextEditingController _phoneController = TextEditingController();
+  final _formKey = GlobalKey<FormState>();
+  User? _currentUser;
 
   late AnimationController _animCtrl;
   late Animation<double> _fadeAnim;
@@ -78,6 +95,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void dispose() {
     _animCtrl.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -94,10 +112,24 @@ class _LoginScreenState extends State<LoginScreen>
         rememberMe: true,
       );
 
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
 
-      if (result.success) {
-        _navigateAfterLogin();
+      if (result.success && result.user != null) {
+        // Check if phone number is missing in Firestore
+        final userData = await authService.getUserData(result.user!.uid);
+        final phone = userData?['phone'] as String? ?? '';
+
+        if (phone.isEmpty) {
+          setState(() {
+            _loading = false;
+            _needsPhoneNumber = true;
+            _currentUser = result.user;
+          });
+        } else {
+          _navigateAfterLogin();
+        }
       } else {
         setState(() {
           _loading = false;
@@ -105,10 +137,12 @@ class _LoginScreenState extends State<LoginScreen>
         });
       }
     } catch (e) {
-      if (!mounted) return;
+      if (!mounted) {
+        return;
+      }
       setState(() {
         _loading = false;
-        _error = 'Sign-in failed. மீண்டும் try பண்ணுங்கள்.\n$e';
+        _error = 'Sign-in failed. Please try again.\n$e';
       });
     }
   }
@@ -149,8 +183,49 @@ class _LoginScreenState extends State<LoginScreen>
     }
   }
 
+  Future<void> _submitPhoneNumber() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+    if (_currentUser == null) {
+      return;
+    }
+
+    setState(() {
+      _loading = true;
+      _error = '';
+    });
+
+    try {
+      final authService = AuthService();
+      final phone = _phoneController.text.trim();
+
+      // 1. Update Firestore
+      await authService.updateUserPhone(_currentUser!.uid, phone);
+
+      // 2. Update Session (Hive)
+      await SessionService().saveSession(
+        userType: _selectedUserType,
+        uid: _currentUser!.uid,
+        email: _currentUser!.email ?? '',
+        displayName: _currentUser!.displayName,
+        phoneNumber: phone,
+        rememberMe: true,
+      );
+
+      _navigateAfterLogin();
+    } catch (e) {
+      setState(() {
+        _loading = false;
+        _error = 'Failed to update phone number: $e';
+      });
+    }
+  }
+
   void _navigateAfterLogin() {
-    if (!mounted) return;
+    if (!mounted) {
+      return;
+    }
     if (widget.postLoginRoute != null && widget.postLoginRoute!.isNotEmpty) {
       Navigator.of(context).pushReplacementNamed(widget.postLoginRoute!);
       return;
@@ -160,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen>
       return;
     }
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const DashboardScreen()),
+      MaterialPageRoute<void>(builder: (_) => const DashboardScreen()),
     );
   }
 
@@ -259,8 +334,8 @@ class _LoginScreenState extends State<LoginScreen>
         const SizedBox(height: 8),
 
         Text(
-          'நம்ம ஊரு ஆப்',
-          style: GoogleFonts.notoSansTamil(fontSize: 16, color: kMuted),
+          'Allin1 Super App',
+          style: GoogleFonts.inter(fontSize: 16, color: kMuted),
         ),
         const SizedBox(height: 16),
 
@@ -305,7 +380,10 @@ class _LoginScreenState extends State<LoginScreen>
         const Text(
           'Login as:',
           style: TextStyle(
-              fontSize: 12, color: kMuted, fontWeight: FontWeight.w500),
+            fontSize: 12,
+            color: kMuted,
+            fontWeight: FontWeight.w500,
+          ),
         ),
         const SizedBox(height: 8),
         Row(
@@ -365,7 +443,6 @@ class _LoginScreenState extends State<LoginScreen>
         color = kOrange;
         break;
       case UserType.user:
-      default:
         label = 'User';
         icon = Icons.person;
         color = kPurple;
@@ -418,7 +495,7 @@ class _LoginScreenState extends State<LoginScreen>
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? color.withOpacity(0.2) : kCard2,
+          color: isSelected ? color.withValues(alpha: 0.2) : kCard2,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected ? color : kBorder,
@@ -475,46 +552,52 @@ class _LoginScreenState extends State<LoginScreen>
           const SizedBox(height: 6),
           Text(
             cardSubtitle,
-            style: TextStyle(fontSize: 12, color: kMuted),
+            style: const TextStyle(fontSize: 12, color: kMuted),
           ),
 
           const SizedBox(height: 24),
 
-          // ── User Type Selector ────────────────────────────────
-          if (widget.lockUserType)
-            _buildLockedUserTypeBadge()
-          else
-            _buildUserTypeSelector(),
+          if (_needsPhoneNumber)
+            _buildPhoneCollectionUI()
+          else ...[
+            // ── User Type Selector ────────────────────────────────
+            if (widget.lockUserType)
+              _buildLockedUserTypeBadge()
+            else
+              _buildUserTypeSelector(),
 
-          const SizedBox(height: 16),
+            const SizedBox(height: 16),
 
-          // ── Google Sign-In Button ────────────────────────
-          if (_loading)
+            // ── Google Sign-In Button ────────────────────────
+            if (_loading)
+              const Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: CircularProgressIndicator(color: kPurple),
+              )
+            else
+              _googleButton(),
+
+            // ── Divider ──────────────────────────────────────
             const Padding(
               padding: EdgeInsets.symmetric(vertical: 16),
-              child: CircularProgressIndicator(color: kPurple),
-            )
-          else
-            _googleButton(),
-
-          // ── Divider ──────────────────────────────────────
-          const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Row(
-              children: [
-                Expanded(child: Divider(color: kBorder)),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child:
-                      Text('or', style: TextStyle(fontSize: 12, color: kMuted)),
-                ),
-                Expanded(child: Divider(color: kBorder)),
-              ],
+              child: Row(
+                children: [
+                  Expanded(child: Divider(color: kBorder)),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'or',
+                      style: TextStyle(fontSize: 12, color: kMuted),
+                    ),
+                  ),
+                  Expanded(child: Divider(color: kBorder)),
+                ],
+              ),
             ),
-          ),
 
-          // ── Guest Button ──────────────────────────────────
-          _guestButton(),
+            // ── Guest Button ──────────────────────────────────
+            _guestButton(),
+          ],
 
           // ── Error ────────────────────────────────────────
           if (_error.isNotEmpty) ...[
@@ -647,6 +730,98 @@ class _LoginScreenState extends State<LoginScreen>
       ],
     );
   }
+
+  // ── PHONE COLLECTION UI ──────────────────────────────────────
+  Widget _buildPhoneCollectionUI() {
+    return Form(
+      key: _formKey,
+      child: Column(
+        children: [
+          const Text(
+            'Almost there! Enter your 10-digit mobile number to continue.',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 13, color: kText),
+          ),
+          const SizedBox(height: 20),
+          TextFormField(
+            controller: _phoneController,
+            keyboardType: TextInputType.phone,
+            style: const TextStyle(color: Colors.white),
+            decoration: InputDecoration(
+              labelText: 'Mobile Number',
+              labelStyle: const TextStyle(color: kMuted),
+              hintText: '9876543210',
+              hintStyle: TextStyle(color: kMuted.withValues(alpha: 0.5)),
+              prefixIcon: const Icon(Icons.phone_iphone, color: kPurple2),
+              filled: true,
+              fillColor: kCard2,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide.none,
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: kBorder),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: const BorderSide(color: kPurple),
+              ),
+            ),
+            validator: (value) {
+              if (value == null || value.isEmpty) {
+                return 'Required';
+              }
+              if (value.length != 10) {
+                return 'Enter 10 digits';
+              }
+              if (!RegExp(r'^[0-9]+$').hasMatch(value)) {
+                return 'Numbers only';
+              }
+              return null;
+            },
+          ),
+          const SizedBox(height: 20),
+          if (_loading)
+            const CircularProgressIndicator(color: kPurple)
+          else
+            GestureDetector(
+              onTap: _submitPhoneNumber,
+              child: Container(
+                width: double.infinity,
+                height: 54,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [kPurple, kPurple2]),
+                  borderRadius: BorderRadius.circular(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: kPurple.withValues(alpha: 0.4),
+                      blurRadius: 15,
+                      offset: const Offset(0, 6),
+                    ),
+                  ],
+                ),
+                child: const Center(
+                  child: Text(
+                    'Submit & Continue',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          const SizedBox(height: 12),
+          TextButton(
+            onPressed: () => setState(() => _needsPhoneNumber = false),
+            child: const Text('Back to Login', style: TextStyle(color: kMuted)),
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 // ── Google Logo Painter ──────────────────────────────────────────
@@ -656,62 +831,54 @@ class _GoogleLogoPainter extends CustomPainter {
     final c = size.width / 2;
     final r = size.width / 2;
 
-    // Blue arc (top-right)
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(c, c), radius: r),
-      -1.57,
-      1.57,
-      false,
-      Paint()
-        ..color = const Color(0xFF4285F4)
-        ..strokeWidth = size.width * 0.22
-        ..style = PaintingStyle.stroke,
-    );
-
-    // Red arc (bottom-right)
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(c, c), radius: r),
-      0,
-      1.57,
-      false,
-      Paint()
-        ..color = const Color(0xFFEA4335)
-        ..strokeWidth = size.width * 0.22
-        ..style = PaintingStyle.stroke,
-    );
-
-    // Yellow arc (bottom-left)
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(c, c), radius: r),
-      1.57,
-      1.57,
-      false,
-      Paint()
-        ..color = const Color(0xFFFBBC05)
-        ..strokeWidth = size.width * 0.22
-        ..style = PaintingStyle.stroke,
-    );
-
-    // Green arc (top-left)
-    canvas.drawArc(
-      Rect.fromCircle(center: Offset(c, c), radius: r),
-      3.14,
-      1.57,
-      false,
-      Paint()
-        ..color = const Color(0xFF34A853)
-        ..strokeWidth = size.width * 0.22
-        ..style = PaintingStyle.stroke,
-    );
-
-    // White horizontal line (G cutout)
-    canvas.drawLine(
-      Offset(c, c),
-      Offset(size.width, c),
-      Paint()
-        ..color = const Color(0xFF4285F4)
-        ..strokeWidth = size.width * 0.22,
-    );
+    canvas
+      ..drawArc(
+        Rect.fromCircle(center: Offset(c, c), radius: r),
+        -1.57,
+        1.57,
+        false,
+        Paint()
+          ..color = const Color(0xFF4285F4)
+          ..strokeWidth = size.width * 0.22
+          ..style = PaintingStyle.stroke,
+      )
+      ..drawArc(
+        Rect.fromCircle(center: Offset(c, c), radius: r),
+        0,
+        1.57,
+        false,
+        Paint()
+          ..color = const Color(0xFFEA4335)
+          ..strokeWidth = size.width * 0.22
+          ..style = PaintingStyle.stroke,
+      )
+      ..drawArc(
+        Rect.fromCircle(center: Offset(c, c), radius: r),
+        1.57,
+        1.57,
+        false,
+        Paint()
+          ..color = const Color(0xFFFBBC05)
+          ..strokeWidth = size.width * 0.22
+          ..style = PaintingStyle.stroke,
+      )
+      ..drawArc(
+        Rect.fromCircle(center: Offset(c, c), radius: r),
+        3.14,
+        1.57,
+        false,
+        Paint()
+          ..color = const Color(0xFF34A853)
+          ..strokeWidth = size.width * 0.22
+          ..style = PaintingStyle.stroke,
+      )
+      ..drawLine(
+        Offset(c, c),
+        Offset(size.width, c),
+        Paint()
+          ..color = const Color(0xFF4285F4)
+          ..strokeWidth = size.width * 0.22,
+      );
   }
 
   @override

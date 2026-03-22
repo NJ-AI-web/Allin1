@@ -14,16 +14,13 @@
   <base href="$FLUTTER_BASE_HREF">
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
-  <meta name="viewport"
-    content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes, viewport-fit=cover">
   <meta name="color-scheme" content="dark light">
   <meta name="supported-color-schemes" content="dark light">
 
   <!-- Primary Meta Tags -->
-  <title>Allin1 Super App - நம்ம ஊரு ஆப்</title>
+  <title>Allin1 — Order & Ride</title>
   <meta name="title" content="Allin1 Super App - All-in-One Commerce Platform">
-  <meta name="description"
-    content="Order food, grocery, tech accessories, and book bike taxis. Voice-first AI assistant supporting Tamil and English. Built by NJ TECH.">
+  <meta name="description" content="Allin1 Super App — Food, Grocery, Bike Taxi & Tech in Erode">
   <meta name="keywords"
     content="Allin1, food delivery, grocery, bike taxi, tech accessories, Tamil, NJ TECH, online shopping, 16th Road, Fresh">
   <meta name="author" content="NJ TECH">
@@ -35,9 +32,9 @@
   <meta name="distribution" content="global">
 
   <!-- Theme Colors -->
-  <meta name="theme-color" content="#7B6FE0" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#7B6FE0" media="(prefers-color-scheme: light)">
-  <meta name="msapplication-navbutton-color" content="#7B6FE0">
+  <meta name="theme-color" content="#FF6B35" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#FF6B35" media="(prefers-color-scheme: light)">
+  <meta name="msapplication-navbutton-color" content="#FF6B35">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 
   <!-- PWA Meta Tags -->
@@ -107,11 +104,9 @@
   <link rel="dns-prefetch" href="https://fonts.googleapis.com">
   <link rel="dns-prefetch" href="https://www.google-analytics.com">
 
-  <!-- Preload Critical Assets -->
-  <link rel="preload" href="fonts/NotoSansTamil-Regular.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="icons/Icon-192.png" as="image">
+  <!-- Note: NotoSansTamil font is loaded via Google Fonts CSS below, not local file -->
 
-  <meta name="google-signin-client_id" content="357526153693-XXXXXXXXXX.apps.googleusercontent.com">
+  <meta name="google-signin-client_id" content="357526153693-02b0behmsf3k720jujg3e8j82frj04q7.apps.googleusercontent.com">
   <!-- PWA Splash Screen Styles -->
   <style>
     .splash-screen {
@@ -120,7 +115,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: linear-gradient(135deg, #08080F 0%, #111118 50%, #08080F 100%);
+      background: #0A0A12;
       display: flex;
       flex-direction: column;
       justify-content: center;
@@ -470,9 +465,13 @@
 
   <!-- Splash Screen -->
   <div class="splash-screen visible" id="splash-screen" role="progressbar" aria-label="Allin1 Super App loading">
-    <div class="splash-logo" aria-hidden="true">🛒</div>
-    <div class="splash-title">Allin1 Super App</div>
-    <div class="splash-subtitle">Food · Grocery · Tech · Bike Taxi</div>
+    <div class="splash-logo" aria-hidden="true" style="background:none;box-shadow:none;border-radius:20px;width:110px;height:110px;display:flex;align-items:center;justify-content:center;">
+      <img src="assets/assets/images/bapx_nj_logo.gif" width="100" height="100"
+        style="border-radius:20px;object-fit:contain;"
+        onerror="this.style.display='none'">
+    </div>
+    <div class="splash-title" style="background:linear-gradient(135deg,#FFD700,#FF6B35);-webkit-background-clip:text;-webkit-text-fill-color:transparent;font-weight:900;">NJ BAPX</div>
+    <div class="splash-subtitle" style="color:#7777A0;font-size:13px;">Allin1 Super App · Erode</div>
     <div class="splash-tagline">Powered by NJ TECH</div>
     <div class="splash-loader" aria-hidden="true"></div>
     <div class="splash-status">Loading...</div>
@@ -544,6 +543,10 @@
     function gtag() { dataLayer.push(arguments); }
     // gtag('js', new Date());
     // gtag('config', 'G-XXXXXXXXXX');
+  </script>
+  <!-- Force HTML Renderer for Flutter Web -->
+  <script>
+    window.flutterWebRenderer = 'html';
   </script>
 </body>
 

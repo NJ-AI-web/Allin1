@@ -1,21 +1,16 @@
-// [REVISED & CLEAN CODE - android/app/build.gradle.kts v5.6]
+// android/app/build.gradle.kts v6.0 — matches current google-services.json
 
 plugins {
     id("com.android.application")
     id("kotlin-android")
-    // Standard Flutter plugin setup
     id("dev.flutter.flutter-gradle-plugin")
-    id("com.google.gms.google-services")  // Firebase support ✅
+    id("com.google.gms.google-services")
 }
 
 android {
-    namespace = "com.example.kutty_guru_ai"
-    
-    // 🚨 PATCH: Updated to SDK 36 as required by your plugins
-    compileSdk = 36 
-
-    // 🚨 PATCH: Using the exact NDK version your terminal requested
-    ndkVersion = "28.2.13676358" 
+    namespace = "com.njtech.allin1"
+    compileSdk = 36
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -27,20 +22,12 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.njtech.namma_guru_ai"
+        // Matches google-services.json — change after adding allin1 app in Firebase Console
+        applicationId = "com.njtech.allin1"
         minSdk = flutter.minSdkVersion
-        
-        // 🚨 targetSdk matched to compileSdk
         targetSdk = 36
-        
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-
-        externalNativeBuild {
-            cmake {
-                version = "3.22.1"
-            }
-        }
     }
 
     buildTypes {
@@ -55,6 +42,7 @@ flutter {
 }
 
 dependencies {
-    implementation(platform("com.google.firebase:firebase-bom:32.7.4"))
-    implementation("com.google.firebase:firebase-analytics-ktx")
+    implementation(platform("com.google.firebase:firebase-bom:33.7.0"))
+    implementation("com.google.firebase:firebase-analytics")
+    implementation("com.google.firebase:firebase-auth")
 }
